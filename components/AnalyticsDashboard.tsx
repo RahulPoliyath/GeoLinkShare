@@ -23,12 +23,7 @@ import {
 } from 'lucide-react';
 import { formatNumber, getRelativeTime, getCountryFlag } from '@/lib/utils';
 import { GeneratedLink } from './LinkCreator';
-import {
-  authFetch,
-  getOrInitAnonymousUserId,
-  loadAnalyticsFromLocalStorage,
-  saveAnalyticsToLocalStorage,
-} from '@/lib/client-auth';
+import { authFetch } from '@/lib/client-auth';
 import {
   acquireHighAccuracyGps,
   GpsFixReading,
@@ -109,24 +104,9 @@ export function AnalyticsDashboard({ links }: AnalyticsDashboardProps) {
   const [gnssResult, setGnssResult] = useState<GpsFixReading | null>(null);
   const [gnssError, setGnssError] = useState<string | null>(null);
 
-  const [anonymousUserId, setAnonymousUserId] = useState<string | null>(null);
-
   useEffect(() => {
     let isMounted = true;
-
     const load = async () => {
-      await Promise.resolve();
-      if (!isMounted) return;
-
-      const uid = getOrInitAnonymousUserId();
-      if (uid) setAnonymousUserId(uid);
-
-      const cached = loadAnalyticsFromLocalStorage<AnalyticsData>(uid, selectedLinkId);
-      if (cached) {
-        setData(cached);
-        setLoading(false);
-      }
-
       try {
         const url =
           selectedLinkId && selectedLinkId !== 'all'
@@ -134,13 +114,8 @@ export function AnalyticsDashboard({ links }: AnalyticsDashboardProps) {
             : '/api/analytics';
         const res = await authFetch(url);
         const json = await res.json();
-        const activeUid = json.workspaceId || uid;
-        if (isMounted && activeUid && activeUid !== uid) {
-          setAnonymousUserId(activeUid);
-        }
         if (isMounted && json.success && json.data) {
           setData(json.data);
-          saveAnalyticsToLocalStorage(activeUid, selectedLinkId, json.data);
           setLastRefreshed(new Date().toLocaleTimeString());
         }
       } catch (err) {
@@ -168,9 +143,7 @@ export function AnalyticsDashboard({ links }: AnalyticsDashboardProps) {
         const res = await authFetch(url);
         const json = await res.json();
         if (json.success && json.data) {
-          const activeUid = json.workspaceId || getOrInitAnonymousUserId();
           setData(json.data);
-          saveAnalyticsToLocalStorage(activeUid, selectedLinkId, json.data);
           setLastRefreshed(new Date().toLocaleTimeString());
         }
       } catch (err) {
@@ -189,9 +162,7 @@ export function AnalyticsDashboard({ links }: AnalyticsDashboardProps) {
       const res = await authFetch(url);
       const json = await res.json();
       if (json.success && json.data) {
-        const activeUid = json.workspaceId || getOrInitAnonymousUserId();
         setData(json.data);
-        saveAnalyticsToLocalStorage(activeUid, selectedLinkId, json.data);
         setLastRefreshed(new Date().toLocaleTimeString());
       }
     } catch (err) {
@@ -281,7 +252,7 @@ export function AnalyticsDashboard({ links }: AnalyticsDashboardProps) {
             <h2 className="text-lg font-bold text-slate-900 dark:text-white">
               Traffic & Performance Telemetry
             </h2>
-            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
               <span>Status:</span>
               <span className="font-mono text-[11px] text-slate-700 dark:text-slate-200">
                 {isLive ? 'Streaming Live' : 'Paused'}
@@ -291,14 +262,6 @@ export function AnalyticsDashboard({ links }: AnalyticsDashboardProps) {
               <span className="font-mono text-[11px] text-slate-700 dark:text-slate-200 tabular-nums">
                 {lastRefreshed || 'Just now'}
               </span>
-              {anonymousUserId && (
-                <>
-                  <span aria-hidden="true">·</span>
-                  <span className="font-mono text-[11px] text-indigo-600 dark:text-indigo-400 truncate max-w-[230px]">
-                    {anonymousUserId}
-                  </span>
-                </>
-              )}
             </div>
           </div>
         </div>

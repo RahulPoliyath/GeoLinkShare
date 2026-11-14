@@ -47,13 +47,11 @@ export interface GeneratedLink {
 }
 
 interface LinkCreatorProps {
-  userId?: string | null;
   onLinkCreated: (link: GeneratedLink) => void;
   onOpenQr: (url: string, title: string) => void;
 }
 
-export function LinkCreator({ userId, onLinkCreated, onOpenQr }: LinkCreatorProps) {
-  const [copiedId, setCopiedId] = useState(false);
+export function LinkCreator({ onLinkCreated, onOpenQr }: LinkCreatorProps) {
   const [originalUrl, setOriginalUrl] = useState('');
   const [customSlug, setCustomSlug] = useState('');
   const [useCustomSlug, setUseCustomSlug] = useState(false);
@@ -571,33 +569,8 @@ export function LinkCreator({ userId, onLinkCreated, onOpenQr }: LinkCreatorProp
 
               {/* Action Bar */}
               <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 min-w-0 max-w-full">
-                  {userId ? (
-                    <>
-                      <span className="shrink-0">User ID:</span>
-                      <span className="font-mono text-[11px] text-slate-800 dark:text-slate-200 truncate max-w-[230px] sm:max-w-[290px]">
-                        {userId}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          navigator.clipboard.writeText(userId);
-                          setCopiedId(true);
-                          setTimeout(() => setCopiedId(false), 1800);
-                        }}
-                        className="p-1 rounded-md hover:bg-slate-200/70 dark:hover:bg-white/10 text-slate-500 dark:text-slate-400 shrink-0"
-                        title="Copy User ID"
-                      >
-                        {copiedId ? (
-                          <Check className="w-3.5 h-3.5 text-emerald-500" />
-                        ) : (
-                          <Copy className="w-3.5 h-3.5" />
-                        )}
-                      </button>
-                    </>
-                  ) : (
-                    <span>Saved locally in browser · No login required</span>
-                  )}
+                <div className="text-xs text-slate-500 dark:text-slate-400">
+                  Instant isolated browser workspace · No login required
                 </div>
 
                 <button

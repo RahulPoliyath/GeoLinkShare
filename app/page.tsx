@@ -18,18 +18,10 @@ import { LinksTable } from '@/components/LinksTable';
 import { QrModal } from '@/components/QrModal';
 import { SecuritySection } from '@/components/SecuritySection';
 import { AmbientBackdrop } from '@/components/AmbientBackdrop';
-import {
-  authFetch,
-  getOrInitAnonymousUserId,
-  loadLinksFromLocalStorage,
-  saveLinksToLocalStorage,
-  safeReadApiResponse,
-} from '@/lib/client-auth';
+import { authFetch, safeReadApiResponse } from '@/lib/client-auth';
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<'shorten' | 'dashboard' | 'analytics' | 'security'>('shorten');
-  const [anonymousUserId, setAnonymousUserId] = useState<string | null>(null);
-  const [copiedUserId, setCopiedUserId] = useState(false);
   const [links, setLinks] = useState<GeneratedLink[]>([]);
   const [linksLoaded, setLinksLoaded] = useState(false);
 
@@ -41,48 +33,17 @@ export default function HomePage() {
 
   useEffect(() => {
     let isMounted = true;
-
-    const loadWorkspace = async () => {
-      await Promise.resolve();
-      if (!isMounted) return;
-
-      const uid = getOrInitAnonymousUserId();
-      const cached = loadLinksFromLocalStorage<GeneratedLink>(uid);
-
-      if (uid) {
-        setAnonymousUserId(uid);
-      }
-      if (cached.length > 0) {
-        setLinks(cached);
-        setLinksLoaded(true);
-      }
-
-      try {
-        const res = await authFetch('/api/links');
-        const { data } = await safeReadApiResponse<{
-          links?: GeneratedLink[];
-          workspaceId?: string;
-        }>(res);
-        if (!isMounted) return;
-
-        const resolvedUid = data?.workspaceId || uid;
-        if (resolvedUid && resolvedUid !== uid) {
-          setAnonymousUserId(resolvedUid);
+    authFetch('/api/links')
+      .then((res) => safeReadApiResponse<{ links?: GeneratedLink[] }>(res))
+      .then(({ data }) => {
+        if (isMounted && data?.links) {
+          setLinks(data.links);
         }
-        if (res.ok && Array.isArray(data?.links)) {
-          if (data.links.length > 0 || cached.length === 0) {
-            setLinks(data.links);
-            saveLinksToLocalStorage(resolvedUid, data.links);
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching links:', err);
-      } finally {
+      })
+      .catch((err) => console.error('Error fetching links:', err))
+      .finally(() => {
         if (isMounted) setLinksLoaded(true);
-      }
-    };
-
-    loadWorkspace();
+      });
 
     return () => {
       isMounted = false;
@@ -90,34 +51,15 @@ export default function HomePage() {
   }, []);
 
   const handleLinkCreated = (newLink: GeneratedLink) => {
-    setLinks((prev) => {
-      const next = [newLink, ...prev];
-      saveLinksToLocalStorage(anonymousUserId || getOrInitAnonymousUserId(), next);
-      return next;
-    });
+    setLinks((prev) => [newLink, ...prev]);
   };
 
   const handleLinkDeleted = (id: string) => {
-    setLinks((prev) => {
-      const next = prev.filter((l) => l.id !== id);
-      saveLinksToLocalStorage(anonymousUserId || getOrInitAnonymousUserId(), next);
-      return next;
-    });
+    setLinks((prev) => prev.filter((l) => l.id !== id));
   };
 
   const handleLinkUpdated = (updatedLink: GeneratedLink) => {
-    setLinks((prev) => {
-      const next = prev.map((l) => (l.id === updatedLink.id ? updatedLink : l));
-      saveLinksToLocalStorage(anonymousUserId || getOrInitAnonymousUserId(), next);
-      return next;
-    });
-  };
-
-  const handleCopyUserId = () => {
-    if (!anonymousUserId) return;
-    navigator.clipboard.writeText(anonymousUserId);
-    setCopiedUserId(true);
-    setTimeout(() => setCopiedUserId(false), 1800);
+    setLinks((prev) => prev.map((l) => (l.id === updatedLink.id ? updatedLink : l)));
   };
 
   const handleOpenQr = (url: string, title: string) => {
@@ -173,7 +115,6 @@ export default function HomePage() {
 
               {/* Core Shortening Engine */}
               <LinkCreator
-                userId={anonymousUserId}
                 onLinkCreated={handleLinkCreated}
                 onOpenQr={handleOpenQr}
               />
@@ -279,22 +220,9 @@ export default function HomePage() {
                   <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
                     Link Management Console
                   </h2>
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    <span>Search, pause, inspect, and manage saved links</span>
-                    {anonymousUserId && (
-                      <>
-                        <span aria-hidden="true">·</span>
-                        <button
-                          type="button"
-                          onClick={handleCopyUserId}
-                          title="Copy your AnonymousUser ID"
-                          className="font-mono text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline truncate max-w-[260px]"
-                        >
-                          {copiedUserId ? 'Copied ID!' : anonymousUserId}
-                        </button>
-                      </>
-                    )}
-                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Search, pause, inspect, and manage all shortened links in your workspace
+                  </p>
                 </div>
                 <button
                   onClick={() => setActiveTab('shorten')}

@@ -9,8 +9,7 @@ const JWT_EXPIRES_IN = '7d';
 export const AUTH_COOKIE_NAME = 'lp_session';
 export const WORKSPACE_COOKIE_NAME = 'lp_workspace';
 export const WORKSPACE_HEADER_NAME = 'x-workspace-id';
-export const ANONYMOUS_USER_PREFIX = 'AnonymousUser-';
-export const WORKSPACE_ID_PATTERN = /^(?:AnonymousUser-[a-zA-Z0-9]{16,48}|ws_[a-f0-9]{32})$/;
+export const WORKSPACE_ID_PATTERN = /^ws_[a-f0-9]{32}$/;
 
 // Valid bcrypt hash used for constant-time dummy verification on unknown usernames
 export const DUMMY_BCRYPT_HASH =
@@ -376,7 +375,7 @@ export function resolveWorkspaceId(req: NextRequest): { workspaceId: string; isN
   if (existing) {
     return { workspaceId: existing, isNew: false };
   }
-  const generated = `${ANONYMOUS_USER_PREFIX}${crypto.randomBytes(12).toString('hex')}`;
+  const generated = `ws_${crypto.randomBytes(16).toString('hex')}`;
   return { workspaceId: generated, isNew: true };
 }
 
