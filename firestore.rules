@@ -1,0 +1,290 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net: Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ==================== Global Security Primitives ====================
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn()
+        && request.auth.token.email_verified == true
+        && request.auth.token.email is string
+        && request.auth.token.firebase.sign_in_provider != 'anonymous';
+    }
+
+    function isOwner(userId) {
+      return isVerifiedUser() && request.auth.uid == userId;
+    }
+
+    function isSafeText(val) {
+      return val is string && !val.matches('.*[<>`"\'\\\\].*');
+    }
+
+    // ==================== Entity Validation Blueprints ====================
+
+    function isValidUserPublicProfile(data) {
+      return data.keys().hasAll(['userId', 'username', 'displayName', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['userId', 'username', 'displayName', 'createdAt', 'updatedAt'])
+        && data.userId is string
+        && data.userId.size() >= 1
+        && data.userId.size() <= 128
+        && data.userId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.userId == request.auth.uid
+        && data.username is string
+        && data.username.size() >= 3
+        && data.username.size() <= 32
+        && data.username.matches('^[a-zA-Z0-9_.-]+$')
+        && !(data.username.lower() in [
+          'admin', 'administrator', 'root', 'system', 'support',
+          'security', 'linkpulse', 'moderator', 'staff', 'api', 'auth'
+        ])
+        && isSafeText(data.displayName)
+        && data.displayName.size() >= 1
+        && data.displayName.size() <= 64
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidUserPrivateInfo(data) {
+      return data.keys().hasAll(['userId', 'email', 'updatedAt'])
+        && data.keys().hasOnly(['userId', 'email', 'updatedAt'])
+        && data.userId is string
+        && data.userId.size() >= 1
+        && data.userId.size() <= 128
+        && data.userId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.userId == request.auth.uid
+        && data.email is string
+        && data.email.size() >= 3
+        && data.email.size() <= 254
+        && data.email == request.auth.token.email
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidShortLink(data) {
+      return data.keys().hasAll([
+          'id', 'userId', 'originalUrl', 'shortCode', 'title',
+          'tags', 'isActive', 'hasPassword', 'clicksCount', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'userId', 'originalUrl', 'shortCode', 'title',
+          'tags', 'isActive', 'hasPassword', 'requireGps', 'gpsMaxAccuracyMeters',
+          'gpsStrictMode', 'expiresAt', 'clicksCount', 'createdAt', 'updatedAt'
+        ])
+        && data.id is string
+        && data.id.size() >= 3
+        && data.id.size() <= 64
+        && data.id.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.userId is string
+        && data.userId.size() >= 1
+        && data.userId.size() <= 128
+        && data.userId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.userId == request.auth.uid
+        && data.originalUrl is string
+        && data.originalUrl.size() >= 10
+        && data.originalUrl.size() <= 2048
+        && data.originalUrl.matches('^https?://[^/\\s]+\\..+')
+        && !data.originalUrl.matches('^https?://[^/]*@.*')
+        && !data.originalUrl.lower().matches('^https?://(localhost|127\\.|10\\.|192\\.168\\.|172\\.(1[6-9]|2[0-9]|3[01])\\.|169\\.254\\.|0\\.0\\.0\\.0|\\[::1\\]|metadata\\.google\\.internal).*')
+        && data.shortCode is string
+        && data.shortCode.size() >= 3
+        && data.shortCode.size() <= 32
+        && data.shortCode.matches('^[a-zA-Z0-9_\\-]+$')
+        && isSafeText(data.title)
+        && data.title.size() >= 1
+        && data.title.size() <= 120
+        && data.tags is list
+        && data.tags.size() <= 10
+        && (data.tags.size() == 0 || (data.tags[0] is string && data.tags[0].size() >= 1 && data.tags[0].size() <= 32 && data.tags[0].matches('^[a-zA-Z0-9_.-]+$')))
+        && data.isActive is bool
+        && data.hasPassword is bool
+        && (!('requireGps' in data) || data.requireGps is bool)
+        && (!('gpsMaxAccuracyMeters' in data) || (data.gpsMaxAccuracyMeters is number && data.gpsMaxAccuracyMeters >= 0.1 && data.gpsMaxAccuracyMeters <= 1000))
+        && (!('gpsStrictMode' in data) || data.gpsStrictMode is bool)
+        && (!('expiresAt' in data) || (data.expiresAt is string && data.expiresAt.size() >= 10 && data.expiresAt.size() <= 64))
+        && data.clicksCount is int
+        && data.clicksCount >= 0
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidClickEvent(data) {
+      return data.keys().hasAll([
+          'id', 'linkId', 'shortCode', 'userId', 'timestamp',
+          'countryCode', 'countryName', 'city', 'referrer', 'referrerCategory',
+          'browser', 'os', 'device'
+        ])
+        && data.keys().hasOnly([
+          'id', 'linkId', 'shortCode', 'userId', 'timestamp',
+          'countryCode', 'countryName', 'city', 'referrer', 'referrerCategory',
+          'browser', 'os', 'device', 'geoSource', 'latitude', 'longitude',
+          'accuracyMeters', 'gpsTargetMet'
+        ])
+        && data.id is string
+        && data.id.size() >= 1
+        && data.id.size() <= 128
+        && data.id.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.linkId is string
+        && data.linkId.size() >= 3
+        && data.linkId.size() <= 64
+        && data.linkId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.shortCode is string
+        && data.shortCode.size() >= 3
+        && data.shortCode.size() <= 32
+        && data.shortCode.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.userId is string
+        && data.userId.size() >= 1
+        && data.userId.size() <= 128
+        && data.userId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.userId == request.auth.uid
+        && data.timestamp is timestamp
+        && data.countryCode is string
+        && data.countryCode.matches('^[A-Z]{2,8}$')
+        && isSafeText(data.countryName)
+        && data.countryName.size() >= 2
+        && data.countryName.size() <= 64
+        && isSafeText(data.city)
+        && data.city.size() >= 1
+        && data.city.size() <= 64
+        && isSafeText(data.referrer)
+        && data.referrer.size() >= 1
+        && data.referrer.size() <= 256
+        && data.referrerCategory in ['direct', 'search', 'social', 'website']
+        && isSafeText(data.browser)
+        && data.browser.size() >= 1
+        && data.browser.size() <= 32
+        && isSafeText(data.os)
+        && data.os.size() >= 1
+        && data.os.size() <= 32
+        && data.device in ['desktop', 'mobile', 'tablet']
+        && (!('geoSource' in data) || data.geoSource in ['ip', 'gps'])
+        && (!('latitude' in data) || (data.latitude is number && data.latitude >= -90 && data.latitude <= 90))
+        && (!('longitude' in data) || (data.longitude is number && data.longitude >= -180 && data.longitude <= 180))
+        && (!('accuracyMeters' in data) || (data.accuracyMeters is number && data.accuracyMeters >= 0.01 && data.accuracyMeters <= 100000))
+        && (!('gpsTargetMet' in data) || data.gpsTargetMet is bool);
+    }
+
+    // ==================== Collection Rules ====================
+
+    // Public User Profiles (PII-free)
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if false;
+      allow create: if isOwner(userId)
+        && isValidId(userId)
+        && isValidUserPublicProfile(incoming())
+        && incoming().userId == userId
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isOwner(userId)
+        && isValidId(userId)
+        && isValidUserPublicProfile(incoming())
+        && incoming().userId == existing().userId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['username', 'displayName', 'updatedAt']);
+      allow delete: if false;
+
+      // Isolated Private PII Subcollection
+      match /private/{docId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(docId) && docId == 'info';
+        allow list: if false;
+        allow create: if isOwner(userId)
+          && isValidId(userId)
+          && isValidId(docId)
+          && docId == 'info'
+          && isValidUserPrivateInfo(incoming())
+          && incoming().userId == userId
+          && incoming().updatedAt == request.time
+          && existsAfter(/databases/$(database)/documents/users/$(userId));
+        allow update: if isOwner(userId)
+          && isValidId(userId)
+          && isValidId(docId)
+          && docId == 'info'
+          && isValidUserPrivateInfo(incoming())
+          && incoming().userId == existing().userId
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['email', 'updatedAt']);
+        allow delete: if false;
+      }
+    }
+
+    // Shortened Links Collection
+    match /links/{linkId} {
+      allow get: if isVerifiedUser() && isValidId(linkId) && existing().userId == request.auth.uid;
+      allow list: if isVerifiedUser() && resource.data.userId == request.auth.uid;
+      allow create: if isVerifiedUser()
+        && isValidId(linkId)
+        && isValidShortLink(incoming())
+        && incoming().id == linkId
+        && incoming().clicksCount == 0
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser()
+        && isValidId(linkId)
+        && isValidShortLink(incoming())
+        && existing().userId == request.auth.uid
+        && incoming().id == existing().id
+        && incoming().userId == existing().userId
+        && incoming().shortCode == existing().shortCode
+        && incoming().originalUrl == existing().originalUrl
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          // Action: Toggle active status
+          incoming().diff(existing()).affectedKeys().hasOnly(['isActive', 'updatedAt'])
+          ||
+          // Action: Update title or tags
+          incoming().diff(existing()).affectedKeys().hasOnly(['title', 'tags', 'updatedAt'])
+          ||
+          // Action: Atomic click count increment
+          (
+            incoming().diff(existing()).affectedKeys().hasOnly(['clicksCount', 'updatedAt'])
+            && incoming().clicksCount == existing().clicksCount + 1
+          )
+        );
+      allow delete: if isVerifiedUser() && isValidId(linkId) && existing().userId == request.auth.uid;
+
+      // Click Telemetry Subcollection (Master Gate via Parent Link)
+      match /clicks/{clickId} {
+        allow get: if isVerifiedUser()
+          && isValidId(linkId)
+          && isValidId(clickId)
+          && existing().userId == request.auth.uid
+          && get(/databases/$(database)/documents/links/$(linkId)).data.userId == request.auth.uid;
+        allow list: if isVerifiedUser() && resource.data.userId == request.auth.uid;
+        allow create: if isVerifiedUser()
+          && isValidId(linkId)
+          && isValidId(clickId)
+          && isValidClickEvent(incoming())
+          && incoming().id == clickId
+          && incoming().linkId == linkId
+          && incoming().timestamp == request.time
+          && exists(/databases/$(database)/documents/links/$(linkId))
+          && get(/databases/$(database)/documents/links/$(linkId)).data.userId == request.auth.uid
+          && getAfter(/databases/$(database)/documents/links/$(linkId)).data.clicksCount == get(/databases/$(database)/documents/links/$(linkId)).data.clicksCount + 1;
+        allow update, delete: if false;
+      }
+    }
+  }
+}

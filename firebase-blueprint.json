@@ -1,0 +1,300 @@
+{
+  "entities": {
+    "UserPublicProfile": {
+      "title": "User Public Profile",
+      "description": "Non-sensitive user identity document containing username and display name.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the user.",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "username": {
+          "type": "string",
+          "description": "Unique handle for the user.",
+          "minLength": 3,
+          "maxLength": 32,
+          "pattern": "^[a-zA-Z0-9_.-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Human-readable display name.",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server-validated creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server-validated update timestamp."
+        }
+      },
+      "required": ["userId", "username", "displayName", "createdAt", "updatedAt"]
+    },
+    "UserPrivateInfo": {
+      "title": "User Private Info",
+      "description": "Isolated PII document storing the user's email address, strictly accessible only by the owning user.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the owner.",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Verified email address of the user.",
+          "maxLength": 254
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server-validated update timestamp."
+        }
+      },
+      "required": ["userId", "email", "updatedAt"]
+    },
+    "ShortLink": {
+      "title": "Shortened Link",
+      "description": "A user-owned shortened URL mapping with configuration, status, and click totals.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the shortened link document.",
+          "minLength": 3,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the link owner.",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "originalUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "Validated destination http/https URL.",
+          "minLength": 10,
+          "maxLength": 2048,
+          "pattern": "^https?://.+"
+        },
+        "shortCode": {
+          "type": "string",
+          "description": "Unique short alias slug.",
+          "minLength": 3,
+          "maxLength": 32,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "description": "Descriptive label for the link.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "tags": {
+          "type": "array",
+          "description": "Bounded list of up to 10 categorization tags."
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Whether the short link is actively redirecting."
+        },
+        "hasPassword": {
+          "type": "boolean",
+          "description": "Whether access to the link is gated by a passcode."
+        },
+        "requireGps": {
+          "type": "boolean",
+          "description": "Whether the link captures opt-in high-accuracy GPS location before redirecting."
+        },
+        "gpsMaxAccuracyMeters": {
+          "type": "number",
+          "description": "Target maximum GPS accuracy radius in meters (default 1m)."
+        },
+        "gpsStrictMode": {
+          "type": "boolean",
+          "description": "Whether redirects are blocked if achieved accuracy exceeds gpsMaxAccuracyMeters."
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Optional ISO expiration timestamp."
+        },
+        "clicksCount": {
+          "type": "integer",
+          "description": "Non-negative total click count."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server-validated creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server-validated update timestamp."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "originalUrl",
+        "shortCode",
+        "title",
+        "tags",
+        "isActive",
+        "hasPassword",
+        "clicksCount",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ClickEvent": {
+      "title": "Click Telemetry Event",
+      "description": "Individual click telemetry record stored under a parent ShortLink subcollection.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique click event ID.",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "linkId": {
+          "type": "string",
+          "description": "Parent link document ID.",
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "shortCode": {
+          "type": "string",
+          "description": "Short alias that was accessed.",
+          "minLength": 3,
+          "maxLength": 32,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID of the parent link owner.",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server-validated event timestamp."
+        },
+        "countryCode": {
+          "type": "string",
+          "description": "Two-letter ISO country code.",
+          "minLength": 2,
+          "maxLength": 8
+        },
+        "countryName": {
+          "type": "string",
+          "description": "Resolved country name.",
+          "minLength": 2,
+          "maxLength": 64
+        },
+        "city": {
+          "type": "string",
+          "description": "Resolved city name.",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "referrer": {
+          "type": "string",
+          "description": "Inbound referrer label or domain.",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "referrerCategory": {
+          "type": "string",
+          "enum": ["direct", "search", "social", "website"],
+          "description": "Categorized acquisition channel."
+        },
+        "browser": {
+          "type": "string",
+          "description": "Detected browser family.",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "os": {
+          "type": "string",
+          "description": "Detected operating system.",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "device": {
+          "type": "string",
+          "enum": ["desktop", "mobile", "tablet"],
+          "description": "Detected hardware class."
+        },
+        "geoSource": {
+          "type": "string",
+          "enum": ["ip", "gps"],
+          "description": "Origin of geographic fix (edge IP headers vs opt-in browser GNSS)."
+        },
+        "latitude": {
+          "type": "number",
+          "description": "WGS84 latitude rounded to 7 decimal places (~1.1cm resolution)."
+        },
+        "longitude": {
+          "type": "number",
+          "description": "WGS84 longitude rounded to 7 decimal places (~1.1cm resolution)."
+        },
+        "accuracyMeters": {
+          "type": "number",
+          "description": "True horizontal 68%-confidence accuracy radius reported by device GNSS in meters."
+        },
+        "gpsTargetMet": {
+          "type": "boolean",
+          "description": "Whether the GNSS reading satisfied the link's target accuracy radius."
+        }
+      },
+      "required": [
+        "id",
+        "linkId",
+        "shortCode",
+        "userId",
+        "timestamp",
+        "countryCode",
+        "countryName",
+        "city",
+        "referrer",
+        "referrerCategory",
+        "browser",
+        "os",
+        "device"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserPublicProfile" },
+      "description": "Public user profile documents keyed by Firebase Auth UID."
+    },
+    "/users/{userId}/private/{docId}": {
+      "schema": { "$ref": "#/entities/UserPrivateInfo" },
+      "description": "Isolated PII subcollection for user email, strictly accessible only by the owner."
+    },
+    "/links/{linkId}": {
+      "schema": { "$ref": "#/entities/ShortLink" },
+      "description": "User-owned shortened URL documents with strict owner-only read/write isolation."
+    },
+    "/links/{linkId}/clicks/{clickId}": {
+      "schema": { "$ref": "#/entities/ClickEvent" },
+      "description": "Click telemetry subcollection gated by parent ShortLink ownership."
+    }
+  }
+}

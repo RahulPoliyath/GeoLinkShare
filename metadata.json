@@ -1,0 +1,6 @@
+{
+  "name": "LinkPulse - Secure URL Shortener & Real-Time Analytics",
+  "description": "High-security URL shortener with authenticated user workspaces, tamper-proof redirection, geo-traffic telemetry, QR code generator, and real-time click analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
