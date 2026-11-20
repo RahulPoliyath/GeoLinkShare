@@ -9,13 +9,20 @@ const JWT_EXPIRES_IN = '7d';
 export const AUTH_COOKIE_NAME = 'lp_session';
 export const WORKSPACE_COOKIE_NAME = 'lp_workspace';
 export const WORKSPACE_HEADER_NAME = 'x-workspace-id';
-export const WORKSPACE_ID_PATTERN = /^ws_[a-f0-9]{32}$/;
+export const TERMS_COOKIE_NAME = 'lp_terms_consent';
+export const TERMS_HEADER_NAME = 'x-terms-token';
+const TERMS_VERSION = 'v1';
+export const ANONYMOUS_USER_PREFIX = 'AnonymousUser-';
+export const WORKSPACE_ID_PATTERN = /^(?:AnonymousUser-[a-zA-Z0-9]{16,48}|ws_[a-f0-9]{32})$/;
 
 // Valid bcrypt hash used for constant-time dummy verification on unknown usernames
 export const DUMMY_BCRYPT_HASH =
   '$2b$12$C6UzMDM.H6dfI/f/IKcEe.1Y0s8W3pK7Z8n4W1X7u5f5p6g7h8i9q';
 
-const globalForSecret = globalThis as unknown as { __lpJwtSecret?: string };
+const globalForSecret = globalThis as unknown as {
+  __lpJwtSecret?: string;
+  __lpTermsSecret?: string;
+};
 
 export class VercelConfigError extends Error {
   constructor(message: string) {
@@ -375,7 +382,7 @@ export function resolveWorkspaceId(req: NextRequest): { workspaceId: string; isN
   if (existing) {
     return { workspaceId: existing, isNew: false };
   }
-  const generated = `ws_${crypto.randomBytes(16).toString('hex')}`;
+  const generated = `${ANONYMOUS_USER_PREFIX}${crypto.randomBytes(12).toString('hex')}`;
   return { workspaceId: generated, isNew: true };
 }
 
@@ -394,6 +401,202 @@ export function setWorkspaceCookie(res: NextResponse, workspaceId: string): void
     maxAge: 365 * 24 * 60 * 60,
     path: '/',
   });
+}
+
+function getTermsSigningSecret(): string {
+  if (globalForSecret.__lpTermsSecret) {
+    return globalForSecret.__lpTermsSecret;
+  }
+
+  const explicit = process.env.TERMS_SIGNING_SECRET?.trim() || process.env.JWT_SECRET?.trim();
+  if (explicit && explicit.length >= 32) {
+    globalForSecret.__lpTermsSecret = explicit;
+    return explicit;
+  }
+
+  if (isVercelOrProd()) {
+    const serverMaterial = [
+      process.env.FIREBASE_SERVICE_ACCOUNT_JSON?.trim() || '',
+      process.env.FIREBASE_PRIVATE_KEY?.trim() || '',
+      process.env.FIREBASE_CLIENT_EMAIL?.trim() || '',
+      process.env.FIREBASE_PROJECT_ID?.trim() || '',
+      process.env.VERCEL_PROJECT_ID?.trim() || '',
+    ]
+      .filter(Boolean)
+      .join('|');
+
+    if (serverMaterial.length >= 16) {
+      const derived = crypto
+        .createHmac('sha256', 'linkpulse-terms-hmac-key-v1')
+        .update(serverMaterial)
+        .digest('hex');
+      globalForSecret.__lpTermsSecret = derived;
+      return derived;
+    }
+
+    throw new VercelConfigError(
+      'Server database/security not configured on Vercel: add FIREBASE_SERVICE_ACCOUNT_JSON (or JWT_SECRET) in Vercel Project Settings -> Environment Variables.'
+    );
+  }
+
+  const localDerived = crypto
+    .createHmac('sha256', 'linkpulse-terms-hmac-key-v1')
+    .update(getJwtSecret())
+    .digest('hex');
+  globalForSecret.__lpTermsSecret = localDerived;
+  return localDerived;
+}
+
+interface TermsTokenPayload {
+  p: 'terms_challenge' | 'terms_consent';
+  v: string;
+  w: string;
+  n: string;
+  iat: number;
+  exp: number;
+}
+
+function signTermsPayload(payload: TermsTokenPayload): string {
+  const payloadB64 = Buffer.from(JSON.stringify(payload), 'utf-8').toString('base64url');
+  const sig = crypto
+    .createHmac('sha256', getTermsSigningSecret())
+    .update(payloadB64)
+    .digest('base64url');
+  return `${payloadB64}.${sig}`;
+}
+
+function verifyTermsSignedToken(token: string): TermsTokenPayload | null {
+  if (!token || typeof token !== 'string' || token.length > 2048) return null;
+  const parts = token.split('.');
+  if (parts.length !== 2) return null;
+  const [payloadB64, sigB64] = parts;
+  if (!payloadB64 || !sigB64) return null;
+
+  try {
+    const expectedSig = crypto
+      .createHmac('sha256', getTermsSigningSecret())
+      .update(payloadB64)
+      .digest('base64url');
+
+    const providedBuf = Buffer.from(sigB64, 'utf-8');
+    const expectedBuf = Buffer.from(expectedSig, 'utf-8');
+    if (providedBuf.length !== expectedBuf.length) return null;
+    if (!crypto.timingSafeEqual(providedBuf, expectedBuf)) return null;
+
+    const decoded = JSON.parse(Buffer.from(payloadB64, 'base64url').toString('utf-8'));
+    if (
+      !decoded ||
+      typeof decoded !== 'object' ||
+      typeof decoded.p !== 'string' ||
+      typeof decoded.v !== 'string' ||
+      typeof decoded.w !== 'string' ||
+      typeof decoded.n !== 'string' ||
+      typeof decoded.iat !== 'number' ||
+      typeof decoded.exp !== 'number'
+    ) {
+      return null;
+    }
+
+    const now = Date.now();
+    if (decoded.exp <= now || decoded.iat > now + 60_000) {
+      return null;
+    }
+
+    return decoded as TermsTokenPayload;
+  } catch {
+    return null;
+  }
+}
+
+export function issueTermsChallenge(workspaceId: string): string {
+  const now = Date.now();
+  return signTermsPayload({
+    p: 'terms_challenge',
+    v: TERMS_VERSION,
+    w: workspaceId,
+    n: crypto.randomBytes(12).toString('hex'),
+    iat: now,
+    exp: now + 15 * 60 * 1000,
+  });
+}
+
+export function verifyTermsChallenge(token: unknown, workspaceId: string): boolean {
+  if (typeof token !== 'string') return false;
+  const decoded = verifyTermsSignedToken(token);
+  if (!decoded) return false;
+  return decoded.p === 'terms_challenge' && decoded.v === TERMS_VERSION && decoded.w === workspaceId;
+}
+
+export function issueTermsConsentToken(workspaceId: string): string {
+  const now = Date.now();
+  return signTermsPayload({
+    p: 'terms_consent',
+    v: TERMS_VERSION,
+    w: workspaceId,
+    n: crypto.randomBytes(12).toString('hex'),
+    iat: now,
+    exp: now + 12 * 60 * 60 * 1000,
+  });
+}
+
+export function verifyTermsConsentTokenValue(
+  token: string | undefined | null,
+  workspaceId: string
+): boolean {
+  if (!token || typeof token !== 'string') return false;
+  const decoded = verifyTermsSignedToken(token);
+  if (!decoded) return false;
+  return decoded.p === 'terms_consent' && decoded.v === TERMS_VERSION && decoded.w === workspaceId;
+}
+
+export function verifyTermsConsentToken(req: NextRequest, workspaceId: string): boolean {
+  const headerToken = req.headers.get(TERMS_HEADER_NAME)?.trim();
+  if (headerToken && verifyTermsConsentTokenValue(headerToken, workspaceId)) {
+    return true;
+  }
+  const cookieToken = req.cookies.get(TERMS_COOKIE_NAME)?.value?.trim();
+  if (cookieToken && verifyTermsConsentTokenValue(cookieToken, workspaceId)) {
+    return true;
+  }
+  return false;
+}
+
+export function setTermsConsentCookie(res: NextResponse, token: string): void {
+  const onVercel = isVercelOrProd();
+  res.cookies.set({
+    name: TERMS_COOKIE_NAME,
+    value: token,
+    httpOnly: true,
+    secure: true,
+    sameSite: onVercel ? 'lax' : 'none',
+    maxAge: 12 * 60 * 60,
+    path: '/',
+  });
+}
+
+export function clearTermsConsentCookie(res: NextResponse): void {
+  const onVercel = isVercelOrProd();
+  res.cookies.set({
+    name: TERMS_COOKIE_NAME,
+    value: '',
+    httpOnly: true,
+    secure: true,
+    sameSite: onVercel ? 'lax' : 'none',
+    maxAge: 0,
+    path: '/',
+  });
+}
+
+export function termsRequiredResponse(): NextResponse {
+  const res = NextResponse.json(
+    {
+      error: 'You must accept the safe-use disclaimer before accessing this resource.',
+      code: 'TERMS_REQUIRED',
+    },
+    { status: 403 }
+  );
+  res.headers.set('X-Terms-Required', 'true');
+  return res;
 }
 
 const BLOCKED_INTERNAL_PORTS = new Set([

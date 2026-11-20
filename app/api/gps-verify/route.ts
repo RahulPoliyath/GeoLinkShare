@@ -70,10 +70,14 @@ export async function POST(req: NextRequest) {
     }
 
     const reading = gpsCheck.reading;
-    const targetMeters = link.gpsMaxAccuracyMeters ?? 1;
-    const targetMet = reading.accuracyMeters <= targetMeters;
+    const isPrecisionGate = Boolean(link.requireGps);
+    const targetMeters = isPrecisionGate ? (link.gpsMaxAccuracyMeters ?? 1) : undefined;
+    const targetMet =
+      isPrecisionGate && targetMeters !== undefined
+        ? reading.accuracyMeters <= targetMeters
+        : undefined;
 
-    if (link.requireGps && link.gpsStrictMode && !targetMet) {
+    if (isPrecisionGate && link.gpsStrictMode && !targetMet && targetMeters !== undefined) {
       return NextResponse.json(
         {
           errorCode: 'GPS_ACCURACY_NOT_MET',
@@ -99,6 +103,8 @@ export async function POST(req: NextRequest) {
       countryCode: geo.countryCode,
       countryName: geo.countryName,
       city: geo.city,
+      region: geo.region,
+      timezone: geo.timezone,
       geoSource: 'gps',
       latitude: reading.latitude,
       longitude: reading.longitude,
@@ -107,16 +113,20 @@ export async function POST(req: NextRequest) {
       headingDeg: reading.headingDeg,
       speedMps: reading.speedMps,
       gpsSamplesCount: reading.samplesCount,
-      gpsTargetMeters: targetMeters,
-      gpsTargetMet: targetMet,
+      ...(isPrecisionGate
+        ? {
+            gpsTargetMeters: targetMeters,
+            gpsTargetMet: targetMet,
+          }
+        : {}),
     });
 
     return NextResponse.json({
       success: true,
       redirectUrl: safeDestination.normalizedUrl,
       accuracyMeters: reading.accuracyMeters,
-      targetMeters,
-      targetMet,
+      targetMeters: targetMeters ?? null,
+      targetMet: targetMet ?? true,
     });
   } catch (err) {
     console.error('GPS verification error:', err);

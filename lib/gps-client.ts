@@ -260,3 +260,110 @@ export function acquireHighAccuracyGps(
     );
   });
 }
+
+export class BrowserLocationError extends Error {
+  code: 'PERMISSION_DENIED' | 'UNAVAILABLE' | 'UNSUPPORTED';
+
+  constructor(
+    message: string,
+    code: 'PERMISSION_DENIED' | 'UNAVAILABLE' | 'UNSUPPORTED'
+  ) {
+    super(message);
+    this.name = 'BrowserLocationError';
+    this.code = code;
+  }
+}
+
+/**
+ * Standard fast browser geolocation acquisition for normal links.
+ * Immediately triggers the browser's native location permission popup;
+ * attempts high-accuracy fix first and falls back to network/Wi-Fi location if needed.
+ */
+export function acquireBrowserLocation(): Promise<GpsFixReading> {
+  return new Promise((resolve, reject) => {
+    if (typeof window === 'undefined' || !('geolocation' in navigator)) {
+      reject(
+        new BrowserLocationError(
+          'Location services are not supported in this browser.',
+          'UNSUPPORTED'
+        )
+      );
+      return;
+    }
+
+    const startMs = Date.now();
+
+    const toFix = (pos: GeolocationPosition): GpsFixReading => {
+      const acc = Math.round(Math.max(0.05, pos.coords.accuracy) * 100) / 100;
+      return {
+        latitude: Math.round(pos.coords.latitude * 1e7) / 1e7,
+        longitude: Math.round(pos.coords.longitude * 1e7) / 1e7,
+        accuracyMeters: acc,
+        altitudeMeters:
+          typeof pos.coords.altitude === 'number' && Number.isFinite(pos.coords.altitude)
+            ? Math.round(pos.coords.altitude * 100) / 100
+            : null,
+        headingDeg:
+          typeof pos.coords.heading === 'number' && Number.isFinite(pos.coords.heading)
+            ? Math.round(pos.coords.heading * 100) / 100
+            : null,
+        speedMps:
+          typeof pos.coords.speed === 'number' && Number.isFinite(pos.coords.speed)
+            ? Math.round(pos.coords.speed * 100) / 100
+            : null,
+        samplesCount: 1,
+        targetAccuracyMeters: acc,
+        targetMet: true,
+        elapsedMs: Date.now() - startMs,
+        bestRawAccuracyMeters: acc,
+      };
+    };
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve(toFix(pos)),
+      (err) => {
+        if (err.code === err.PERMISSION_DENIED) {
+          reject(
+            new BrowserLocationError(
+              'Location permission is blocked. Enable location in your browser to view content.',
+              'PERMISSION_DENIED'
+            )
+          );
+          return;
+        }
+
+        // Fall back to Google/network location provider when GPS hardware times out or is unavailable indoors
+        navigator.geolocation.getCurrentPosition(
+          (pos) => resolve(toFix(pos)),
+          (fallbackErr) => {
+            if (fallbackErr.code === fallbackErr.PERMISSION_DENIED) {
+              reject(
+                new BrowserLocationError(
+                  'Location permission is blocked. Enable location in your browser to view content.',
+                  'PERMISSION_DENIED'
+                )
+              );
+              return;
+            }
+            reject(
+              new BrowserLocationError(
+                'Unable to read your device location right now. Please ensure location is turned on and try again.',
+                'UNAVAILABLE'
+              )
+            );
+          },
+          {
+            enableHighAccuracy: false,
+            maximumAge: 30000,
+            timeout: 7000,
+          }
+        );
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 5000,
+        timeout: 6000,
+      }
+    );
+  });
+}

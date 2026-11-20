@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { Link2, ShieldCheck, Crosshair, BarChart3 } from 'lucide-react';
 
@@ -13,12 +14,24 @@ const STAGE_MESSAGES = [
   'Preparing real-time analytics',
 ] as const;
 
-export function SplashScreen() {
+interface SplashScreenProps {
+  onComplete?: () => void;
+}
+
+export function SplashScreen({ onComplete }: SplashScreenProps = {}) {
+  const pathname = usePathname();
+  const isVisitorGateRoute =
+    Boolean(pathname?.startsWith('/verify-location')) ||
+    Boolean(pathname?.startsWith('/unlock')) ||
+    Boolean(pathname?.startsWith('/link-status'));
+
   const [phase, setPhase] = useState<'active' | 'exiting' | 'done'>('active');
   const [elapsedMs, setElapsedMs] = useState(0);
   const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
+    if (isVisitorGateRoute) return;
+
     const prevOverflow = document.documentElement.style.overflow;
     document.documentElement.style.overflow = 'hidden';
 
@@ -43,6 +56,7 @@ export function SplashScreen() {
 
     const doneTimer = window.setTimeout(() => {
       setPhase('done');
+      onComplete?.();
     }, SPLASH_DURATION_MS + EXIT_FADE_MS);
 
     return () => {
@@ -51,9 +65,9 @@ export function SplashScreen() {
       window.clearTimeout(doneTimer);
       document.documentElement.style.overflow = prevOverflow;
     };
-  }, []);
+  }, [isVisitorGateRoute, onComplete]);
 
-  if (phase === 'done') {
+  if (isVisitorGateRoute || phase === 'done') {
     return null;
   }
 
@@ -106,20 +120,28 @@ export function SplashScreen() {
             transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
             className="relative z-10 w-full max-w-md glass-surface border border-slate-200/80 dark:border-white/15 rounded-3xl p-8 sm:p-10 text-center"
           >
-            {/* Brand Mark with Subtle Orbital Ring */}
-            <div className="relative w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+            {/* Brand Mark with Dual Counter-Rotating Orbital Rings */}
+            <div className="relative w-24 h-24 mx-auto mb-6 flex items-center justify-center">
               {!prefersReducedMotion && (
-                <motion.div
-                  aria-hidden="true"
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
-                  className="absolute inset-0 rounded-full border border-dashed border-indigo-500/40 dark:border-indigo-400/35"
-                />
+                <>
+                  <motion.div
+                    aria-hidden="true"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 7, repeat: Infinity, ease: 'linear' }}
+                    className="absolute inset-0 rounded-full border border-dashed border-indigo-500/45 dark:border-cyan-400/40"
+                  />
+                  <motion.div
+                    aria-hidden="true"
+                    animate={{ rotate: -360 }}
+                    transition={{ duration: 11, repeat: Infinity, ease: 'linear' }}
+                    className="absolute inset-2 rounded-full border border-indigo-400/25 dark:border-indigo-300/25 border-t-cyan-400/75"
+                  />
+                </>
               )}
               <motion.div
-                initial={prefersReducedMotion ? {} : { scale: 0.85, opacity: 0 }}
+                initial={prefersReducedMotion ? {} : { scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.4, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.45, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
                 className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-sky-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30"
               >
                 <Link2 className="w-7 h-7" />
@@ -127,15 +149,32 @@ export function SplashScreen() {
             </div>
 
             {/* Wordmark & Positioning */}
-            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-              LinkPulse
-            </h1>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 text-balance">
+            <div className="overflow-hidden">
+              <motion.h1
+                initial={prefersReducedMotion ? false : { y: '100%', opacity: 0 }}
+                animate={{ y: '0%', opacity: 1 }}
+                transition={{ duration: 0.55, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+                className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white"
+              >
+                LinkPulse
+              </motion.h1>
+            </div>
+            <motion.p
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              className="mt-2 text-sm text-slate-600 dark:text-slate-300 text-balance"
+            >
               Secure URL Shortening &amp; Real-Time Geographic Telemetry
-            </p>
+            </motion.p>
 
             {/* Three Capability Indicators (clean unboxed text) */}
-            <div className="mt-6 flex items-center justify-center gap-4 text-xs text-slate-500 dark:text-slate-400">
+            <motion.div
+              initial={prefersReducedMotion ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.45, delay: 0.3 }}
+              className="mt-6 flex items-center justify-center gap-4 text-xs text-slate-500 dark:text-slate-400"
+            >
               <span className="inline-flex items-center gap-1.5">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
                 <span>SSRF Guard</span>
@@ -150,21 +189,32 @@ export function SplashScreen() {
                 <Crosshair className="w-3.5 h-3.5 text-sky-500" />
                 <span>1m GNSS</span>
               </span>
-            </div>
+            </motion.div>
 
-            {/* Compositor-Only Progress Track + Tabular Countdown */}
+            {/* Compositor-Only Progress Track + Animated Stage Message Crossfade */}
             <div className="mt-8 space-y-2.5">
               <div className="w-full h-1.5 rounded-full bg-slate-200/80 dark:bg-white/10 overflow-hidden">
                 <div
-                  className="h-full w-full origin-left rounded-full bg-gradient-to-r from-indigo-600 via-sky-500 to-indigo-500 will-change-transform"
+                  className="h-full w-full origin-left rounded-full bg-gradient-to-r from-indigo-600 via-cyan-400 to-indigo-500 will-change-transform"
                   style={{
                     transform: `scaleX(${progressRatio})`,
                   }}
                 />
               </div>
 
-              <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                <span className="truncate">{STAGE_MESSAGES[stageIndex]}</span>
+              <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 min-h-[18px]">
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={stageIndex}
+                    initial={prefersReducedMotion ? false : { opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={prefersReducedMotion ? undefined : { opacity: 0, y: -4 }}
+                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                    className="truncate"
+                  >
+                    {STAGE_MESSAGES[stageIndex]}
+                  </motion.span>
+                </AnimatePresence>
                 <span className="font-mono tabular-nums font-semibold text-slate-700 dark:text-slate-200 shrink-0 ml-3">
                   {secondsRemaining}s
                 </span>

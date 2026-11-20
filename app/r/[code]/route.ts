@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   checkDistributedRateLimit,
   getLinkByShortCode,
-  recordClick,
 } from '@/lib/db';
-import { extractGeoData } from '@/lib/geo';
 import { getClientIp, validateSafeUrl } from '@/lib/security';
 
 function noCacheRedirect(target: string | URL, status: 302 | 307 = 307): NextResponse {
@@ -71,32 +69,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ code
       return noCacheRedirect(new URL(`/unlock/${encodeURIComponent(code)}`, req.url));
     }
 
-    // If high-accuracy GPS verification is enabled, route through opt-in GNSS verification gate
-    if (link.requireGps) {
-      return noCacheRedirect(new URL(`/verify-location/${encodeURIComponent(code)}`, req.url));
-    }
-
-    // Record Telemetry Click before issuing redirect (critical on Vercel serverless)
-    const referrer = req.headers.get('referer') || 'direct';
-    const userAgent = req.headers.get('user-agent') || '';
-    const geo = extractGeoData(req);
-
-    await recordClick({
-      linkId: link.id,
-      shortCode: link.shortCode,
-      userId: link.userId,
-      ip,
-      referrer,
-      userAgent,
-      countryCode: geo.countryCode,
-      countryName: geo.countryName,
-      city: geo.city,
-    });
-
-    // 307 Temporary Redirect with strict anti-caching so analytics stay 100% accurate
-    const response = noCacheRedirect(safeUrlCheck.normalizedUrl, 307);
-    response.headers.set('Referrer-Policy', 'no-referrer-when-downgrade');
-    return response;
+    // Route visitors through the browser location permission & disclaimer gate
+    return noCacheRedirect(new URL(`/verify-location/${encodeURIComponent(code)}`, req.url));
   } catch (err) {
     console.error('Redirection error:', err);
     const codeParam = /^[a-zA-Z0-9_-]{3,32}$/.test(shortCodeForError)

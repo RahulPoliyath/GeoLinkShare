@@ -118,6 +118,8 @@ export async function POST(req: NextRequest) {
       countryCode: geo.countryCode,
       countryName: geo.countryName,
       city: geo.city,
+      region: geo.region,
+      timezone: geo.timezone,
       ...(gpsReading
         ? {
             geoSource: 'gps' as const,
@@ -131,7 +133,10 @@ export async function POST(req: NextRequest) {
             gpsTargetMeters: targetMeters,
             gpsTargetMet: targetMet,
           }
-        : {}),
+        : {
+            latitude: geo.latitude,
+            longitude: geo.longitude,
+          }),
     });
 
     return NextResponse.json({ success: true, redirectUrl: safeDestination.normalizedUrl });

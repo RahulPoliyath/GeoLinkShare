@@ -4,6 +4,8 @@ import {
   getClientIp,
   resolveWorkspaceId,
   setWorkspaceCookie,
+  termsRequiredResponse,
+  verifyTermsConsentToken,
 } from '@/lib/security';
 import { checkDistributedRateLimit, getAnalyticsSummary } from '@/lib/db';
 
@@ -13,6 +15,10 @@ export async function GET(req: NextRequest) {
   try {
     const clientIp = getClientIp(req);
     const { workspaceId } = resolveWorkspaceId(req);
+
+    if (!verifyTermsConsentToken(req, workspaceId)) {
+      return termsRequiredResponse();
+    }
 
     if (
       !(await checkDistributedRateLimit(`analytics_ip:${clientIp}`, 150, 60 * 1000)) ||

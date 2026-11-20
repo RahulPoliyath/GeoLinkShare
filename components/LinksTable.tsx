@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import {
   Copy,
   Check,
@@ -19,6 +19,7 @@ import {
 import { formatDate, formatNumber } from '@/lib/utils';
 import { GeneratedLink } from './LinkCreator';
 import { authFetch, safeReadApiResponse } from '@/lib/client-auth';
+import { AnimatedNumber } from './MotionPrimitives';
 
 interface LinksTableProps {
   links: GeneratedLink[];
@@ -195,13 +196,22 @@ export function LinksTable({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200/60 dark:divide-white/10 text-xs">
-                {filteredLinks.map((link) => {
-                  const shortUrl = `${origin}/r/${link.shortCode}`;
-                  return (
-                    <tr
-                      key={link.id}
-                      className="hover:bg-indigo-500/[0.04] dark:hover:bg-white/[0.04] transition-colors"
-                    >
+                <AnimatePresence initial={false}>
+                  {filteredLinks.map((link, idx) => {
+                    const shortUrl = `${origin}/r/${link.shortCode}`;
+                    return (
+                      <motion.tr
+                        key={link.id}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{
+                          duration: 0.22,
+                          delay: Math.min(idx * 0.03, 0.24),
+                          ease: [0.16, 1, 0.3, 1],
+                        }}
+                        className="group hover:bg-indigo-500/[0.04] dark:hover:bg-white/[0.04] transition-colors"
+                      >
                       {/* Short Link & Title */}
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-2">
@@ -254,7 +264,7 @@ export function LinksTable({
                       {/* Total Clicks */}
                       <td className="py-3.5 px-4 text-right">
                         <span className="font-mono font-bold text-slate-900 dark:text-white text-sm tabular-nums">
-                          {formatNumber(link.clicksCount)}
+                          <AnimatedNumber value={link.clicksCount} formatter={formatNumber} />
                         </span>
                       </td>
 
@@ -324,35 +334,50 @@ export function LinksTable({
                             <BarChart2 className="w-4 h-4" />
                           </button>
 
-                          {confirmDeleteId === link.id ? (
-                            <div className="flex items-center gap-1 ml-1">
-                              <button
-                                onClick={() => handleDelete(link.id)}
-                                className="px-2 py-1 text-[11px] font-medium bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors whitespace-nowrap"
+                          <AnimatePresence mode="wait" initial={false}>
+                            {confirmDeleteId === link.id ? (
+                              <motion.div
+                                key="confirm-delete"
+                                initial={{ opacity: 0, scale: 0.92 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.92 }}
+                                transition={{ duration: 0.14 }}
+                                className="flex items-center gap-1 ml-1"
                               >
-                                Confirm
-                              </button>
-                              <button
-                                onClick={() => setConfirmDeleteId(null)}
-                                className="px-2 py-1 text-[11px] font-medium bg-white/80 dark:bg-white/10 border border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-200 rounded-lg transition-colors whitespace-nowrap"
+                                <button
+                                  onClick={() => handleDelete(link.id)}
+                                  className="px-2 py-1 text-[11px] font-medium bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors whitespace-nowrap"
+                                >
+                                  Confirm
+                                </button>
+                                <button
+                                  onClick={() => setConfirmDeleteId(null)}
+                                  className="px-2 py-1 text-[11px] font-medium bg-white/80 dark:bg-white/10 border border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-200 rounded-lg transition-colors whitespace-nowrap"
+                                >
+                                  Cancel
+                                </button>
+                              </motion.div>
+                            ) : (
+                              <motion.button
+                                key="delete-btn"
+                                initial={{ opacity: 0, scale: 0.92 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.92 }}
+                                transition={{ duration: 0.14 }}
+                                onClick={() => setConfirmDeleteId(link.id)}
+                                className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                title="Delete Shortened Link"
                               >
-                                Cancel
-                              </button>
-                            </div>
-                          ) : (
-                            <button
-                              onClick={() => setConfirmDeleteId(link.id)}
-                              className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                              title="Delete Shortened Link"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
+                                <Trash2 className="w-4 h-4" />
+                              </motion.button>
+                            )}
+                          </AnimatePresence>
                         </div>
                       </td>
-                    </tr>
+                    </motion.tr>
                   );
                 })}
+                </AnimatePresence>
               </tbody>
             </table>
           </div>

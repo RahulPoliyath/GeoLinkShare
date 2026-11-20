@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import type { DocumentReference, Firestore } from 'firebase-admin/firestore';
 import { getAdminFieldValue, getAdminFirestore, isVercelRuntime } from './firebase-admin';
+import { resolveApproxCoordinates } from './geo';
 import {
   checkRateLimit as checkLocalRateLimit,
   sanitizeText,
@@ -48,6 +49,8 @@ export interface ClickRecord {
   countryCode: string;
   countryName: string;
   city: string;
+  region?: string;
+  timezone?: string;
   referrer: string;
   referrerCategory: 'direct' | 'search' | 'social' | 'website';
   browser: string;
@@ -823,6 +826,8 @@ function buildClickRecord(data: {
   countryCode?: string;
   countryName?: string;
   city?: string;
+  region?: string;
+  timezone?: string;
   geoSource?: 'ip' | 'gps';
   latitude?: number;
   longitude?: number;
@@ -902,6 +907,8 @@ function buildClickRecord(data: {
     countryCode: safeCountryCode.length >= 2 ? safeCountryCode : 'US',
     countryName: sanitizeText(data.countryName || 'United States', 64) || 'United States',
     city: sanitizeText(data.city || 'Undisclosed', 64) || 'Undisclosed',
+    ...(data.region ? { region: sanitizeText(data.region, 64) } : {}),
+    ...(data.timezone ? { timezone: sanitizeText(data.timezone, 64) } : {}),
     referrer: cleanRef,
     referrerCategory,
     browser,
@@ -923,8 +930,20 @@ function buildClickRecord(data: {
     record.headingDeg = data.headingDeg ?? null;
     record.speedMps = data.speedMps ?? null;
     record.gpsSamplesCount = data.gpsSamplesCount ?? 1;
-    record.gpsTargetMeters = data.gpsTargetMeters ?? 1;
-    record.gpsTargetMet = Boolean(data.gpsTargetMet);
+    if (typeof data.gpsTargetMeters === 'number') {
+      record.gpsTargetMeters = data.gpsTargetMeters;
+    }
+    if (typeof data.gpsTargetMet === 'boolean') {
+      record.gpsTargetMet = data.gpsTargetMet;
+    }
+  } else if (
+    typeof data.latitude === 'number' &&
+    Number.isFinite(data.latitude) &&
+    typeof data.longitude === 'number' &&
+    Number.isFinite(data.longitude)
+  ) {
+    record.latitude = Math.round(data.latitude * 10000) / 10000;
+    record.longitude = Math.round(data.longitude * 10000) / 10000;
   }
 
   return record;
@@ -940,6 +959,8 @@ export async function recordClick(data: {
   countryCode?: string;
   countryName?: string;
   city?: string;
+  region?: string;
+  timezone?: string;
   geoSource?: 'ip' | 'gps';
   latitude?: number;
   longitude?: number;
@@ -1106,6 +1127,46 @@ export async function getAnalyticsSummary(userId: string, linkId?: string) {
   const sub1mCount = accuracies.filter((acc) => acc <= 1.0).length;
   const targetMetCount = gpsClicks.filter((c) => c.gpsTargetMet).length;
 
+  const mapLocations = userClicks
+    .slice(0, 100)
+    .map((c) => {
+      const hasExactGps =
+        c.geoSource === 'gps' &&
+        typeof c.latitude === 'number' &&
+        typeof c.longitude === 'number';
+      const resolvedCoords =
+        typeof c.latitude === 'number' && typeof c.longitude === 'number'
+          ? { latitude: c.latitude, longitude: c.longitude }
+          : resolveApproxCoordinates(c.city, c.countryCode);
+
+      if (!resolvedCoords) return null;
+
+      return {
+        id: c.id,
+        linkId: c.linkId,
+        shortCode: c.shortCode,
+        timestamp: c.timestamp,
+        ip: c.ip,
+        countryCode: c.countryCode,
+        countryName: c.countryName,
+        city: c.city,
+        region: c.region || null,
+        timezone: c.timezone || null,
+        referrer: c.referrer,
+        browser: c.browser,
+        os: c.os,
+        device: c.device,
+        geoSource: hasExactGps ? ('gps' as const) : ('ip' as const),
+        latitude: resolvedCoords.latitude,
+        longitude: resolvedCoords.longitude,
+        accuracyMeters:
+          hasExactGps && typeof c.accuracyMeters === 'number' ? c.accuracyMeters : null,
+        altitudeMeters: c.altitudeMeters ?? null,
+        gpsSamplesCount: c.gpsSamplesCount ?? null,
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null);
+
   return {
     totalClicks,
     uniqueVisitors: uniqueIps,
@@ -1118,6 +1179,7 @@ export async function getAnalyticsSummary(userId: string, linkId?: string) {
     devices: deviceCounts,
     browsers: browserCounts,
     recentClicks,
+    mapLocations,
     gpsSummary: {
       gpsClicksCount: gpsClicks.length,
       sub1mCount,

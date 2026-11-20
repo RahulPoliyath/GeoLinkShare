@@ -7,6 +7,8 @@ import {
   hasPrototypePollution,
   sanitizeLinkForClient,
   sanitizeText,
+  termsRequiredResponse,
+  verifyTermsConsentToken,
 } from '@/lib/security';
 import {
   checkDistributedRateLimit,
@@ -22,6 +24,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const workspaceId = getExistingWorkspaceId(req);
     if (!workspaceId) {
       return NextResponse.json({ error: 'Link not found or access denied' }, { status: 404 });
+    }
+    if (!verifyTermsConsentToken(req, workspaceId)) {
+      return termsRequiredResponse();
     }
 
     const clientIp = getClientIp(req);
@@ -55,6 +60,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const workspaceId = getExistingWorkspaceId(req);
     if (!workspaceId) {
       return NextResponse.json({ error: 'Link not found or access denied' }, { status: 404 });
+    }
+    if (!verifyTermsConsentToken(req, workspaceId)) {
+      return termsRequiredResponse();
     }
 
     const clientIp = getClientIp(req);
@@ -144,6 +152,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     const workspaceId = getExistingWorkspaceId(req);
     if (!workspaceId) {
       return NextResponse.json({ error: 'Link not found or access denied' }, { status: 404 });
+    }
+    if (!verifyTermsConsentToken(req, workspaceId)) {
+      return termsRequiredResponse();
     }
 
     const clientIp = getClientIp(req);

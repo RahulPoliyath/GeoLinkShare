@@ -8,10 +8,12 @@ import {
   sanitizeText,
   sanitizeLinkForClient,
   setWorkspaceCookie,
+  termsRequiredResponse,
   validateSafeUrl,
   validateSlug,
   generateRandomSlug,
   hashPassword,
+  verifyTermsConsentToken,
 } from '@/lib/security';
 import {
   checkDistributedRateLimit,
@@ -24,6 +26,10 @@ export async function GET(req: NextRequest) {
   try {
     const clientIp = getClientIp(req);
     const { workspaceId } = resolveWorkspaceId(req);
+
+    if (!verifyTermsConsentToken(req, workspaceId)) {
+      return termsRequiredResponse();
+    }
 
     if (
       !(await checkDistributedRateLimit(`get_links_ip:${clientIp}`, 180, 60 * 1000)) ||
@@ -53,6 +59,10 @@ export async function POST(req: NextRequest) {
   try {
     const clientIp = getClientIp(req);
     const { workspaceId } = resolveWorkspaceId(req);
+
+    if (!verifyTermsConsentToken(req, workspaceId)) {
+      return termsRequiredResponse();
+    }
 
     // Dual IP + workspace rate limiting prevents abuse in zero-login mode
     const [ipAllowed, wsAllowed] = await Promise.all([

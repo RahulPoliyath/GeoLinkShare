@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Link2,
@@ -16,8 +16,11 @@ import {
   Lock,
   ChevronDown,
   Crosshair,
+  ShieldCheck,
+  ArrowRight,
 } from 'lucide-react';
 import { authFetch, safeReadApiResponse } from '@/lib/client-auth';
+import { SpotlightCard, SpringToggle } from './MotionPrimitives';
 
 const LINK_CONSTRAINTS = {
   shortCodePattern: /^[a-zA-Z0-9_-]+$/,
@@ -47,11 +50,13 @@ export interface GeneratedLink {
 }
 
 interface LinkCreatorProps {
+  userId?: string | null;
   onLinkCreated: (link: GeneratedLink) => void;
   onOpenQr: (url: string, title: string) => void;
 }
 
-export function LinkCreator({ onLinkCreated, onOpenQr }: LinkCreatorProps) {
+export function LinkCreator({ userId, onLinkCreated, onOpenQr }: LinkCreatorProps) {
+  const [copiedId, setCopiedId] = useState(false);
   const [originalUrl, setOriginalUrl] = useState('');
   const [customSlug, setCustomSlug] = useState('');
   const [useCustomSlug, setUseCustomSlug] = useState(false);
@@ -71,6 +76,28 @@ export function LinkCreator({ onLinkCreated, onOpenQr }: LinkCreatorProps) {
   const [copied, setCopied] = useState(false);
 
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
+
+  const liveUrlPreview = useMemo(() => {
+    const raw = originalUrl.trim();
+    if (!raw) return null;
+    if (/^(javascript|data|vbscript|file|blob):/i.test(raw)) {
+      return { valid: false, label: 'Blocked protocol scheme' };
+    }
+    const candidate = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+    try {
+      const parsed = new URL(candidate);
+      if (!parsed.hostname || !parsed.hostname.includes('.')) {
+        return { valid: false, label: 'Enter a valid public domain' };
+      }
+      return {
+        valid: true,
+        protocol: parsed.protocol.replace(':', '').toUpperCase(),
+        host: parsed.hostname,
+      };
+    } catch {
+      return { valid: false, label: 'Validating URL format...' };
+    }
+  }, [originalUrl]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -168,7 +195,11 @@ export function LinkCreator({ onLinkCreated, onOpenQr }: LinkCreatorProps) {
 
   return (
     <div className="w-full max-w-4xl mx-auto">
-      <div className="glass-surface border border-slate-200/80 dark:border-white/15 rounded-3xl p-6 sm:p-8 relative overflow-hidden">
+      <SpotlightCard
+        hoverLift={false}
+        spotlightColor="rgba(99, 102, 241, 0.14)"
+        className="glass-surface border border-slate-200/80 dark:border-white/15 rounded-3xl p-6 sm:p-8"
+      >
         {/* Title & Description */}
         <div className="mb-6">
           <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 mb-2">
@@ -214,8 +245,25 @@ export function LinkCreator({ onLinkCreated, onOpenQr }: LinkCreatorProps) {
               className="space-y-6"
             >
               <div className="p-5 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/10 border border-emerald-500/25">
-                <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-semibold text-sm mb-3">
-                  <Check className="w-4 h-4" />
+                <div className="flex items-center gap-2.5 text-emerald-700 dark:text-emerald-400 font-semibold text-sm mb-3">
+                  <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.4">
+                    <motion.circle
+                      cx="12"
+                      cy="12"
+                      r="9.5"
+                      initial={{ pathLength: 0, opacity: 0 }}
+                      animate={{ pathLength: 1, opacity: 1 }}
+                      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                    />
+                    <motion.path
+                      d="M8.5 12.5l2.3 2.3 4.8-5.1"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{ duration: 0.35, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                    />
+                  </svg>
                   <span>Link shortened successfully!</span>
                 </div>
 
@@ -230,17 +278,33 @@ export function LinkCreator({ onLinkCreated, onOpenQr }: LinkCreatorProps) {
                       onClick={handleCopy}
                       className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-medium transition-all active:scale-[0.98] shadow-md shadow-indigo-500/25 whitespace-nowrap"
                     >
-                      {copied ? (
-                        <>
-                          <Check className="w-4 h-4" />
-                          <span>Copied!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-4 h-4" />
-                          <span>Copy Link</span>
-                        </>
-                      )}
+                      <AnimatePresence mode="wait" initial={false}>
+                        {copied ? (
+                          <motion.span
+                            key="copied"
+                            initial={{ opacity: 0, scale: 0.85 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.85 }}
+                            transition={{ duration: 0.12 }}
+                            className="inline-flex items-center gap-1.5"
+                          >
+                            <Check className="w-4 h-4" />
+                            <span>Copied!</span>
+                          </motion.span>
+                        ) : (
+                          <motion.span
+                            key="copy"
+                            initial={{ opacity: 0, scale: 0.85 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.85 }}
+                            transition={{ duration: 0.12 }}
+                            className="inline-flex items-center gap-1.5"
+                          >
+                            <Copy className="w-4 h-4" />
+                            <span>Copy Link</span>
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
                     </button>
 
                     <a
@@ -330,9 +394,34 @@ export function LinkCreator({ onLinkCreated, onOpenQr }: LinkCreatorProps) {
                     className="w-full pl-10 pr-4 py-3 bg-white/75 dark:bg-slate-950/60 border border-slate-300/80 dark:border-white/15 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
                   />
                 </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5">
-                  Protected against SSRF, credential phishing (@), and invalid script protocols.
-                </p>
+                <div className="flex flex-wrap items-center justify-between gap-2 mt-1.5 min-h-[18px]">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Protected against SSRF, credential phishing (@), and invalid script protocols.
+                  </p>
+                  <AnimatePresence mode="wait">
+                    {liveUrlPreview && (
+                      <motion.span
+                        key={liveUrlPreview.valid ? liveUrlPreview.host : liveUrlPreview.label}
+                        initial={{ opacity: 0, y: -3 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -3 }}
+                        transition={{ duration: 0.14 }}
+                        className={`inline-flex items-center gap-1.5 text-[11px] font-mono ${
+                          liveUrlPreview.valid
+                            ? 'text-emerald-600 dark:text-emerald-400'
+                            : 'text-amber-600 dark:text-amber-400'
+                        }`}
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                        <span>
+                          {liveUrlPreview.valid
+                            ? `${liveUrlPreview.protocol} · ${liveUrlPreview.host}`
+                            : liveUrlPreview.label}
+                        </span>
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
 
               {/* Custom Slug or Random */}
@@ -419,26 +508,31 @@ export function LinkCreator({ onLinkCreated, onOpenQr }: LinkCreatorProps) {
                         {/* Password Protection */}
                         <div>
                           <div className="flex items-center justify-between mb-1.5">
-                            <label className="text-xs font-medium text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                            <span className="text-xs font-medium text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
                               <Lock className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                               <span>Passcode Protection</span>
-                            </label>
-                            <input
-                              type="checkbox"
+                            </span>
+                            <SpringToggle
                               checked={hasPassword}
-                              onChange={(e) => setHasPassword(e.target.checked)}
-                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                              onChange={setHasPassword}
+                              ariaLabel="Toggle passcode protection"
                             />
                           </div>
-                          {hasPassword && (
-                            <input
-                              type="password"
-                              value={password}
-                              onChange={(e) => setPassword(e.target.value)}
-                              placeholder="Set link passcode"
-                              className="w-full px-3 py-1.5 bg-white/80 dark:bg-slate-900/80 border border-slate-300/80 dark:border-white/15 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
-                            />
-                          )}
+                          <AnimatePresence>
+                            {hasPassword && (
+                              <motion.input
+                                initial={{ opacity: 0, y: -4 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -4 }}
+                                transition={{ duration: 0.16 }}
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="Set link passcode"
+                                className="w-full px-3 py-1.5 bg-white/80 dark:bg-slate-900/80 border border-slate-300/80 dark:border-white/15 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+                              />
+                            )}
+                          </AnimatePresence>
                         </div>
 
                         {/* Expiration Timer */}
@@ -485,15 +579,14 @@ export function LinkCreator({ onLinkCreated, onOpenQr }: LinkCreatorProps) {
                       {/* Precision GPS Verification (1m Target) */}
                       <div className="pt-2 border-t border-slate-200/70 dark:border-white/10 space-y-3">
                         <div className="flex items-center justify-between">
-                          <label className="text-xs font-medium text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                          <span className="text-xs font-medium text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
                             <Crosshair className="w-3.5 h-3.5 text-indigo-500" />
                             <span>Require High-Accuracy GPS Verification (1m Target)</span>
-                          </label>
-                          <input
-                            type="checkbox"
+                          </span>
+                          <SpringToggle
                             checked={requireGps}
-                            onChange={(e) => setRequireGps(e.target.checked)}
-                            className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                            onChange={setRequireGps}
+                            ariaLabel="Toggle high-accuracy GPS verification"
                           />
                         </div>
 
@@ -569,22 +662,50 @@ export function LinkCreator({ onLinkCreated, onOpenQr }: LinkCreatorProps) {
 
               {/* Action Bar */}
               <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <div className="text-xs text-slate-500 dark:text-slate-400">
-                  Instant isolated browser workspace · No login required
+                <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 min-w-0 max-w-full">
+                  {userId ? (
+                    <>
+                      <span className="shrink-0">User ID:</span>
+                      <span className="font-mono text-[11px] text-slate-800 dark:text-slate-200 truncate max-w-[230px] sm:max-w-[290px]">
+                        {userId}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(userId);
+                          setCopiedId(true);
+                          setTimeout(() => setCopiedId(false), 1800);
+                        }}
+                        className="p-1 rounded-md hover:bg-slate-200/70 dark:hover:bg-white/10 text-slate-500 dark:text-slate-400 shrink-0"
+                        title="Copy User ID"
+                      >
+                        {copiedId ? (
+                          <Check className="w-3.5 h-3.5 text-emerald-500" />
+                        ) : (
+                          <Copy className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                    </>
+                  ) : (
+                    <span>Saved locally in browser · No login required</span>
+                  )}
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full sm:w-auto px-6 py-3 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white font-medium text-sm rounded-xl transition-all shadow-md shadow-indigo-500/25 disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
+                  className="group w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white font-medium text-sm rounded-xl transition-all shadow-md shadow-indigo-500/25 disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
                 >
-                  {loading ? 'Creating Short Link...' : 'Shorten URL & Track'}
+                  <span>{loading ? 'Creating Short Link...' : 'Shorten URL & Track'}</span>
+                  {!loading && (
+                    <ArrowRight className="w-4 h-4 transition-transform duration-150 group-hover:translate-x-0.5" />
+                  )}
                 </button>
               </div>
             </motion.form>
           )}
         </AnimatePresence>
-      </div>
+      </SpotlightCard>
     </div>
   );
 }

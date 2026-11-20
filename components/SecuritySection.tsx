@@ -11,6 +11,7 @@ import {
   Server,
   FileCheck2,
 } from 'lucide-react';
+import { MaskedReveal, SpotlightCard } from './MotionPrimitives';
 
 export function SecuritySection() {
   const securityPillars = [
@@ -70,9 +71,11 @@ export function SecuritySection() {
               <ShieldCheck className="w-3.5 h-3.5 text-sky-400" />
               <span>Hardened Security Architecture</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mb-2 text-balance">
-              Defense-in-Depth Link Shortening
-            </h2>
+            <MaskedReveal>
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mb-2 text-balance">
+                Defense-in-Depth Link Shortening
+              </h2>
+            </MaskedReveal>
             <p className="text-sm text-slate-300 leading-relaxed">
               Every link shortened and click recorded traverses defensive protocol sanitizers,
               128-bit workspace isolation, and rate-limited firewalls built for instant open
@@ -84,15 +87,15 @@ export function SecuritySection() {
 
       {/* Security Pillars Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {securityPillars.map((pillar) => (
-          <motion.div
+        {securityPillars.map((pillar, idx) => (
+          <SpotlightCard
             key={pillar.title}
-            whileHover={{ y: -3 }}
-            transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
-            className="glass-surface border border-slate-200/80 dark:border-white/15 rounded-2xl p-5 hover:border-indigo-500/30 transition-colors"
+            delay={idx * 0.05}
+            spotlightColor="rgba(99, 102, 241, 0.15)"
+            className="glass-surface border border-slate-200/80 dark:border-white/15 rounded-2xl p-5 hover:border-indigo-500/35 transition-colors"
           >
             <div className="flex items-center justify-between mb-3">
-              <div className="p-2 rounded-xl bg-white/75 dark:bg-white/5 border border-slate-200/70 dark:border-white/10">
+              <div className="p-2 rounded-xl bg-white/75 dark:bg-white/5 border border-slate-200/70 dark:border-white/10 transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-3">
                 {pillar.icon}
               </div>
               <span className="text-[10px] font-mono font-medium text-slate-500 dark:text-slate-400 tracking-wider">
@@ -105,7 +108,7 @@ export function SecuritySection() {
             <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
               {pillar.desc}
             </p>
-          </motion.div>
+          </SpotlightCard>
         ))}
       </div>
 
@@ -130,10 +133,14 @@ export function SecuritySection() {
             { label: 'IP + Workspace Sliding-Window Rate Limiters', status: 'Active' },
             { label: 'Prototype Pollution & Payload Size Ceiling (64KB)', status: 'Active' },
             { label: 'HTTP Security Headers (nosniff / HSTS / CSP)', status: 'Active' },
-          ].map((item) => (
-            <div
+          ].map((item, idx) => (
+            <motion.div
               key={item.label}
-              className="flex items-center justify-between p-3 rounded-xl bg-white/60 dark:bg-white/[0.04] border border-slate-200/70 dark:border-white/10"
+              initial={{ opacity: 0, y: 6 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.24, delay: idx * 0.03, ease: [0.16, 1, 0.3, 1] }}
+              className="flex items-center justify-between p-3 rounded-xl bg-white/60 dark:bg-white/[0.04] border border-slate-200/70 dark:border-white/10 hover:border-emerald-500/30 transition-colors"
             >
               <span className="text-slate-700 dark:text-slate-200 font-medium">
                 {item.label}
@@ -141,7 +148,7 @@ export function SecuritySection() {
               <span className="font-mono text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold shrink-0 ml-2">
                 {item.status}
               </span>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
