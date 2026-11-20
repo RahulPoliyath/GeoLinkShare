@@ -57,26 +57,33 @@ export function Navbar({ activeTab, setActiveTab }: NavbarProps) {
           </button>
         </div>
 
-        {/* Zone 2: Clean single-line text navigation links with animated spring underline */}
-        <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600 dark:text-slate-300">
+        {/* Zone 2: Clean single-line text navigation links with precision spring underline */}
+        <nav className="hidden md:flex items-center gap-5 text-sm font-medium text-slate-600 dark:text-slate-300">
           {NAV_ITEMS.map((item) => {
             const isActive = activeTab === item.id;
             return (
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`relative whitespace-nowrap shrink-0 py-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded px-1 ${
+                className={`relative whitespace-nowrap shrink-0 py-1.5 px-2.5 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                   isActive
-                    ? 'text-indigo-600 dark:text-indigo-400 font-semibold'
+                    ? 'text-indigo-600 dark:text-cyan-300 font-semibold'
                     : 'hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
+                {isActive && (
+                  <motion.span
+                    layoutId="navbar-active-surface"
+                    transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                    className="absolute inset-0 -z-10 rounded-lg bg-indigo-500/[0.08] dark:bg-cyan-400/[0.08] border border-indigo-500/15 dark:border-cyan-400/20"
+                  />
+                )}
                 <span>{item.label}</span>
                 {isActive && (
                   <motion.span
                     layoutId="navbar-active-indicator"
                     transition={{ type: 'spring', stiffness: 480, damping: 36 }}
-                    className="absolute left-0 right-0 -bottom-0.5 h-0.5 rounded-full bg-gradient-to-r from-indigo-600 to-sky-500 dark:from-indigo-400 dark:to-sky-400"
+                    className="absolute left-2.5 right-2.5 -bottom-[1px] h-[2px] rounded-full bg-gradient-to-r from-indigo-600 via-cyan-400 to-sky-500"
                   />
                 )}
               </button>

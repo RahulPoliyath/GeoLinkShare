@@ -20,7 +20,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { authFetch, safeReadApiResponse } from '@/lib/client-auth';
-import { SpotlightCard, SpringToggle } from './MotionPrimitives';
+import { MagneticShell, SpotlightCard, SpringToggle } from './MotionPrimitives';
 
 const LINK_CONSTRAINTS = {
   shortCodePattern: /^[a-zA-Z0-9_-]+$/,
@@ -197,7 +197,9 @@ export function LinkCreator({ userId, onLinkCreated, onOpenQr }: LinkCreatorProp
     <div className="w-full max-w-4xl mx-auto">
       <SpotlightCard
         hoverLift={false}
+        showReticles
         spotlightColor="rgba(99, 102, 241, 0.14)"
+        borderGlowColor="rgba(56, 189, 248, 0.45)"
         className="glass-surface border border-slate-200/80 dark:border-white/15 rounded-3xl p-6 sm:p-8"
       >
         {/* Title & Description */}
@@ -691,16 +693,18 @@ export function LinkCreator({ userId, onLinkCreated, onOpenQr }: LinkCreatorProp
                   )}
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="group w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white font-medium text-sm rounded-xl transition-all shadow-md shadow-indigo-500/25 disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
-                >
-                  <span>{loading ? 'Creating Short Link...' : 'Shorten URL & Track'}</span>
-                  {!loading && (
-                    <ArrowRight className="w-4 h-4 transition-transform duration-150 group-hover:translate-x-0.5" />
-                  )}
-                </button>
+                <MagneticShell strength={4} className="w-full sm:w-auto">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="group w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white font-medium text-sm rounded-xl transition-all shadow-md shadow-indigo-500/25 disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
+                  >
+                    <span>{loading ? 'Creating Short Link...' : 'Shorten URL & Track'}</span>
+                    {!loading && (
+                      <ArrowRight className="w-4 h-4 transition-transform duration-150 group-hover:translate-x-0.5" />
+                    )}
+                  </button>
+                </MagneticShell>
               </div>
             </motion.form>
           )}

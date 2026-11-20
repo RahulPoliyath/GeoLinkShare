@@ -91,7 +91,9 @@ export function SecuritySection() {
           <SpotlightCard
             key={pillar.title}
             delay={idx * 0.05}
+            showReticles
             spotlightColor="rgba(99, 102, 241, 0.15)"
+            borderGlowColor="rgba(56, 189, 248, 0.5)"
             className="glass-surface border border-slate-200/80 dark:border-white/15 rounded-2xl p-5 hover:border-indigo-500/35 transition-colors"
           >
             <div className="flex items-center justify-between mb-3">

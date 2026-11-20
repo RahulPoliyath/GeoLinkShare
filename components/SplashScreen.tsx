@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { Link2, ShieldCheck, Crosshair, BarChart3 } from 'lucide-react';
+import { AmbientBackdrop } from './AmbientBackdrop';
 
 const SPLASH_DURATION_MS = 6000;
 const EXIT_FADE_MS = 380;
@@ -95,31 +96,22 @@ export function SplashScreen({ onComplete }: SplashScreenProps = {}) {
           }}
           className="fixed inset-0 z-[100] flex flex-col items-center justify-center px-6 bg-slate-50 dark:bg-[#060913] text-slate-900 dark:text-slate-100 select-none overflow-hidden"
         >
-          {/* Ambient Grid & Refracted Glow matching main workspace */}
-          <div
-            aria-hidden="true"
-            className="absolute inset-0 pointer-events-none overflow-hidden"
-          >
-            <div
-              className="absolute inset-0 tech-grid-bg opacity-85"
-              style={{
-                maskImage:
-                  'radial-gradient(ellipse 75% 65% at 50% 45%, black 25%, transparent 100%)',
-                WebkitMaskImage:
-                  'radial-gradient(ellipse 75% 65% at 50% 45%, black 25%, transparent 100%)',
-              }}
-            />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[680px] h-[380px] rounded-full bg-indigo-400/20 dark:bg-indigo-500/20 blur-[120px]" />
-            <div className="absolute top-1/3 left-1/3 w-[360px] h-[280px] rounded-full bg-sky-300/20 dark:bg-sky-500/15 blur-[100px]" />
-          </div>
+          {/* Living Hi-Tech Ambient Backdrop */}
+          <AmbientBackdrop />
 
           {/* Centerpiece Brand Reveal Card */}
           <motion.div
             initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 14, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-            className="relative z-10 w-full max-w-md glass-surface border border-slate-200/80 dark:border-white/15 rounded-3xl p-8 sm:p-10 text-center"
+            className="relative z-10 w-full max-w-md glass-surface border border-slate-200/80 dark:border-white/15 rounded-3xl p-8 sm:p-10 text-center overflow-hidden"
           >
+            <div aria-hidden="true" className="pointer-events-none absolute inset-3.5">
+              <span className="absolute top-0 left-0 w-2.5 h-2.5 border-t border-l border-indigo-400/50 dark:border-cyan-400/45" />
+              <span className="absolute top-0 right-0 w-2.5 h-2.5 border-t border-r border-indigo-400/50 dark:border-cyan-400/45" />
+              <span className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b border-l border-indigo-400/50 dark:border-cyan-400/45" />
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b border-r border-indigo-400/50 dark:border-cyan-400/45" />
+            </div>
             {/* Brand Mark with Dual Counter-Rotating Orbital Rings */}
             <div className="relative w-24 h-24 mx-auto mb-6 flex items-center justify-center">
               {!prefersReducedMotion && (

@@ -29,7 +29,7 @@ export function ScrollProgressLine() {
     <motion.div
       aria-hidden="true"
       style={{ scaleX }}
-      className="fixed top-0 left-0 right-0 h-[2px] z-50 origin-left pointer-events-none bg-gradient-to-r from-indigo-500 via-cyan-400 to-sky-500"
+      className="fixed top-0 left-0 right-0 h-[2px] z-50 origin-left pointer-events-none bg-gradient-to-r from-indigo-500 via-cyan-400 to-sky-500 shadow-[0_0_12px_rgba(34,211,238,0.45)]"
     />
   );
 }
@@ -91,28 +91,34 @@ export function AnimatedNumber({
 }
 
 /**
- * Interactive pointer-tracked specular spotlight card (zero per-move React re-renders).
+ * Dual-layer optical spotlight card with pointer-tracked specular surface + border edge refraction.
+ * Uses MotionValues directly so cursor movement triggers zero React re-renders.
  */
 interface SpotlightCardProps {
   children: React.ReactNode;
   className?: string;
   spotlightColor?: string;
+  borderGlowColor?: string;
   delay?: number;
   hoverLift?: boolean;
+  showReticles?: boolean;
 }
 
 export function SpotlightCard({
   children,
   className = '',
   spotlightColor = 'rgba(56, 189, 248, 0.14)',
+  borderGlowColor = 'rgba(99, 102, 241, 0.55)',
   delay = 0,
   hoverLift = true,
+  showReticles = false,
 }: SpotlightCardProps) {
   const prefersReduced = useReducedMotion();
-  const mouseX = useMotionValue(-300);
-  const mouseY = useMotionValue(-300);
+  const mouseX = useMotionValue(-400);
+  const mouseY = useMotionValue(-400);
 
-  const background = useMotionTemplate`radial-gradient(360px circle at ${mouseX}px ${mouseY}px, ${spotlightColor}, transparent 75%)`;
+  const surfaceGlow = useMotionTemplate`radial-gradient(360px circle at ${mouseX}px ${mouseY}px, ${spotlightColor}, transparent 74%)`;
+  const borderGlow = useMotionTemplate`radial-gradient(240px circle at ${mouseX}px ${mouseY}px, ${borderGlowColor}, transparent 70%)`;
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (prefersReduced) return;
@@ -122,28 +128,58 @@ export function SpotlightCard({
   };
 
   const handlePointerLeave = () => {
-    mouseX.set(-300);
-    mouseY.set(-300);
+    mouseX.set(-400);
+    mouseY.set(-400);
   };
 
   return (
     <motion.div
       initial={prefersReduced ? false : { opacity: 0, y: 14 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.15 }}
+      viewport={{ once: true, amount: 0.12 }}
       whileHover={hoverLift && !prefersReduced ? { y: -3 } : undefined}
       transition={{ duration: 0.38, delay, ease: [0.16, 1, 0.3, 1] }}
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}
       className={`group relative overflow-hidden ${className}`}
     >
+      {/* Pointer-tracked surface illumination */}
       {!prefersReduced && (
         <motion.div
           aria-hidden="true"
-          style={{ background }}
+          style={{ background: surfaceGlow }}
           className="pointer-events-none absolute -inset-px opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-0"
         />
       )}
+
+      {/* Pointer-tracked crisp 1px edge refraction ring */}
+      {!prefersReduced && (
+        <motion.div
+          aria-hidden="true"
+          style={{
+            background: borderGlow,
+            WebkitMask:
+              'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+            WebkitMaskComposite: 'xor',
+            maskComposite: 'exclude',
+          }}
+          className="pointer-events-none absolute inset-0 rounded-[inherit] p-[1px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-0"
+        />
+      )}
+
+      {/* Optional architectural corner reticle ticks */}
+      {showReticles && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-3 z-10 opacity-40 group-hover:opacity-90 transition-opacity duration-200"
+        >
+          <span className="absolute top-0 left-0 w-2 h-2 border-t border-l border-indigo-400/60 dark:border-cyan-400/55" />
+          <span className="absolute top-0 right-0 w-2 h-2 border-t border-r border-indigo-400/60 dark:border-cyan-400/55" />
+          <span className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-indigo-400/60 dark:border-cyan-400/55" />
+          <span className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-indigo-400/60 dark:border-cyan-400/55" />
+        </div>
+      )}
+
       <div className="relative z-10 h-full">{children}</div>
     </motion.div>
   );
@@ -175,6 +211,51 @@ export function MaskedReveal({ children, delay = 0, className = '' }: MaskedReve
         {children}
       </motion.div>
     </div>
+  );
+}
+
+/**
+ * Tactile spring-coupled magnetic wrapper for primary interactive buttons.
+ */
+interface MagneticShellProps {
+  children: React.ReactNode;
+  className?: string;
+  strength?: number;
+}
+
+export function MagneticShell({
+  children,
+  className = '',
+  strength = 6,
+}: MagneticShellProps) {
+  const prefersReduced = useReducedMotion();
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const springX = useSpring(x, { stiffness: 320, damping: 22, mass: 0.4 });
+  const springY = useSpring(y, { stiffness: 320, damping: 22, mass: 0.4 });
+
+  if (prefersReduced) {
+    return <div className={className}>{children}</div>;
+  }
+
+  return (
+    <motion.div
+      style={{ x: springX, y: springY }}
+      onPointerMove={(e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const relX = (e.clientX - rect.left) / rect.width - 0.5;
+        const relY = (e.clientY - rect.top) / rect.height - 0.5;
+        x.set(relX * strength * 2);
+        y.set(relY * strength * 2);
+      }}
+      onPointerLeave={() => {
+        x.set(0);
+        y.set(0);
+      }}
+      className={`inline-block ${className}`}
+    >
+      {children}
+    </motion.div>
   );
 }
 

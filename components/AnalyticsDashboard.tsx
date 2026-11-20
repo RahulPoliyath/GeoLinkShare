@@ -370,11 +370,13 @@ export function AnalyticsDashboard({ links }: AnalyticsDashboardProps) {
         </div>
       </div>
 
-      {/* KPI 4-Card Strip with Spotlight & Animated Counters */}
+      {/* KPI 4-Card Strip with Dual-Layer Optical Spotlight & Animated Counters */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <SpotlightCard
           delay={0.02}
+          showReticles
           spotlightColor="rgba(99, 102, 241, 0.16)"
+          borderGlowColor="rgba(99, 102, 241, 0.55)"
           className="glass-surface border border-slate-200/80 dark:border-white/15 rounded-2xl p-5 hover:border-indigo-500/35 transition-colors"
         >
           <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-2">
@@ -391,7 +393,9 @@ export function AnalyticsDashboard({ links }: AnalyticsDashboardProps) {
 
         <SpotlightCard
           delay={0.07}
+          showReticles
           spotlightColor="rgba(16, 185, 129, 0.15)"
+          borderGlowColor="rgba(16, 185, 129, 0.5)"
           className="glass-surface border border-slate-200/80 dark:border-white/15 rounded-2xl p-5 hover:border-emerald-500/35 transition-colors"
         >
           <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-2">
@@ -408,7 +412,9 @@ export function AnalyticsDashboard({ links }: AnalyticsDashboardProps) {
 
         <SpotlightCard
           delay={0.12}
+          showReticles
           spotlightColor="rgba(14, 165, 233, 0.16)"
+          borderGlowColor="rgba(56, 189, 248, 0.55)"
           className="glass-surface border border-slate-200/80 dark:border-white/15 rounded-2xl p-5 hover:border-sky-500/35 transition-colors"
         >
           <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-2">
@@ -426,7 +432,9 @@ export function AnalyticsDashboard({ links }: AnalyticsDashboardProps) {
 
         <SpotlightCard
           delay={0.17}
+          showReticles
           spotlightColor="rgba(99, 102, 241, 0.15)"
+          borderGlowColor="rgba(129, 140, 248, 0.5)"
           className="glass-surface border border-slate-200/80 dark:border-white/15 rounded-2xl p-5 hover:border-indigo-400/35 transition-colors"
         >
           <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-2">
@@ -587,7 +595,10 @@ export function AnalyticsDashboard({ links }: AnalyticsDashboardProps) {
               <div className="p-2.5 rounded-xl bg-white/60 dark:bg-white/5 border border-slate-200/70 dark:border-white/10 text-center">
                 <Monitor className="w-4 h-4 mx-auto mb-1 text-slate-500 dark:text-slate-400" />
                 <div className="text-xs font-mono font-bold text-slate-900 dark:text-white tabular-nums">
-                  {Math.round(((analytics.devices.desktop || 0) / totalDeviceClicks) * 100)}%
+                  <AnimatedNumber
+                    value={Math.round(((analytics.devices.desktop || 0) / totalDeviceClicks) * 100)}
+                  />
+                  %
                 </div>
                 <div className="text-[10px] text-slate-500 dark:text-slate-400">Desktop</div>
               </div>
@@ -595,7 +606,10 @@ export function AnalyticsDashboard({ links }: AnalyticsDashboardProps) {
               <div className="p-2.5 rounded-xl bg-white/60 dark:bg-white/5 border border-slate-200/70 dark:border-white/10 text-center">
                 <Smartphone className="w-4 h-4 mx-auto mb-1 text-slate-500 dark:text-slate-400" />
                 <div className="text-xs font-mono font-bold text-slate-900 dark:text-white tabular-nums">
-                  {Math.round(((analytics.devices.mobile || 0) / totalDeviceClicks) * 100)}%
+                  <AnimatedNumber
+                    value={Math.round(((analytics.devices.mobile || 0) / totalDeviceClicks) * 100)}
+                  />
+                  %
                 </div>
                 <div className="text-[10px] text-slate-500 dark:text-slate-400">Mobile</div>
               </div>
@@ -603,7 +617,10 @@ export function AnalyticsDashboard({ links }: AnalyticsDashboardProps) {
               <div className="p-2.5 rounded-xl bg-white/60 dark:bg-white/5 border border-slate-200/70 dark:border-white/10 text-center">
                 <Tablet className="w-4 h-4 mx-auto mb-1 text-slate-500 dark:text-slate-400" />
                 <div className="text-xs font-mono font-bold text-slate-900 dark:text-white tabular-nums">
-                  {Math.round(((analytics.devices.tablet || 0) / totalDeviceClicks) * 100)}%
+                  <AnimatedNumber
+                    value={Math.round(((analytics.devices.tablet || 0) / totalDeviceClicks) * 100)}
+                  />
+                  %
                 </div>
                 <div className="text-[10px] text-slate-500 dark:text-slate-400">Tablet</div>
               </div>

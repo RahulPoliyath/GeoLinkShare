@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { SplashScreen } from './SplashScreen';
 import { RefusedTerms3D } from './RefusedTerms3D';
+import { AmbientBackdrop } from './AmbientBackdrop';
 import { MaskedReveal, SpotlightCard } from './MotionPrimitives';
 import {
   ANONYMOUS_USER_ID_REGEX,
@@ -263,18 +264,16 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
       aria-labelledby="disclaimer-heading"
       className="min-h-screen w-full relative flex items-center justify-center px-4 py-10 bg-slate-50 dark:bg-[#060913] text-slate-900 dark:text-slate-100 overflow-y-auto"
     >
-      {/* Subtle Ambient Background */}
-      <div aria-hidden="true" className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute inset-0 tech-grid-bg opacity-85" />
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[640px] h-[360px] rounded-full bg-indigo-500/15 blur-[120px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-[380px] h-[280px] rounded-full bg-sky-500/10 blur-[100px]" />
-      </div>
+      {/* Living Hi-Tech Ambient Backdrop */}
+      <AmbientBackdrop />
 
       <AnimatePresence mode="wait">
         <SpotlightCard
           key="disclaimer-card"
           hoverLift={false}
+          showReticles
           spotlightColor="rgba(99, 102, 241, 0.14)"
+          borderGlowColor="rgba(56, 189, 248, 0.5)"
           className="relative z-10 w-full max-w-2xl glass-elevated border border-slate-200/80 dark:border-white/15 rounded-3xl p-6 sm:p-9 space-y-6"
         >
           {/* Header */}

@@ -1,18 +1,16 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Sparkles,
   Link2,
-  BarChart3,
   Globe2,
-  Lock,
   ArrowRight,
   CheckCircle2,
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
-import { LinkCreator, GeneratedLink } from '@/components/LinkCreator';
+import { GeneratedLink } from '@/components/LinkCreator';
 import { AnalyticsDashboard } from '@/components/AnalyticsDashboard';
 import { LinksTable } from '@/components/LinksTable';
 import { QrModal } from '@/components/QrModal';
@@ -20,11 +18,18 @@ import { SecuritySection } from '@/components/SecuritySection';
 import { AmbientBackdrop } from '@/components/AmbientBackdrop';
 import {
   AnimatedNumber,
+  MagneticShell,
   MaskedReveal,
   ScrollProgressLine,
-  SpotlightCard,
 } from '@/components/MotionPrimitives';
 import { HeroParticleGlobe } from '@/components/HeroParticleGlobe';
+import { CosmicUniverseStage3D } from '@/components/CosmicUniverseStage3D';
+import { ScrollMorphWorkspace } from '@/components/ScrollMorphWorkspace';
+import {
+  createInitialScrollStageState,
+  requestSmoothScrollTo,
+  triggerCosmicBurst,
+} from '@/lib/scroll-stage';
 import {
   authFetch,
   getOrInitAnonymousUserId,
@@ -39,6 +44,7 @@ export default function HomePage() {
   const [copiedUserId, setCopiedUserId] = useState(false);
   const [links, setLinks] = useState<GeneratedLink[]>([]);
   const [linksLoaded, setLinksLoaded] = useState(false);
+  const stageStateRef = useRef(createInitialScrollStageState());
 
   const [qrModalData, setQrModalData] = useState<{ isOpen: boolean; url: string; title: string }>({
     isOpen: false,
@@ -135,23 +141,35 @@ export default function HomePage() {
     });
   };
 
+  const handleNavigateTab = (tab: 'shorten' | 'dashboard' | 'analytics' | 'security') => {
+    setActiveTab(tab);
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }
+  };
+
   const handleSelectLinkForAnalytics = (_linkId: string) => {
-    setActiveTab('analytics');
+    handleNavigateTab('analytics');
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative text-slate-900 dark:text-slate-100">
+    <div
+      className={`min-h-screen flex flex-col relative text-slate-900 dark:text-slate-100 ${
+        activeTab === 'shorten' ? 'webgl-stage-active' : ''
+      }`}
+    >
       <ScrollProgressLine />
       <AmbientBackdrop />
+      {activeTab === 'shorten' && <CosmicUniverseStage3D stageStateRef={stageStateRef} />}
 
       {/* Top Bar Navigation */}
-      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Navbar activeTab={activeTab} setActiveTab={handleNavigateTab} />
 
       {/* Full-Bleed Interactive 3D WebGL Hero Section */}
       {activeTab === 'shorten' && (
         <section
           aria-label="Hero showcase"
-          className="relative w-full min-h-[540px] sm:min-h-[600px] lg:min-h-[640px] overflow-hidden bg-[#020813] border-b border-cyan-500/20"
+          className="relative z-10 w-full min-h-[540px] sm:min-h-[600px] lg:min-h-[640px] overflow-hidden bg-[#020813] border-b border-cyan-500/20"
         >
           {/* Interactive 3D Cyan/Blue Particle River & Rotating Wireframe Globe */}
           <HeroParticleGlobe />
@@ -216,28 +234,38 @@ export default function HomePage() {
               </p>
 
               <div className="flex flex-wrap items-center justify-center gap-3 pointer-events-auto">
-                <button
-                  type="button"
-                  onClick={() => {
-                    document
-                      .getElementById('link-creator-section')
-                      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  }}
-                  className="group inline-flex items-center gap-2 min-h-[44px] px-5 py-2.5 rounded-xl bg-white hover:bg-cyan-50 text-[#020813] text-xs sm:text-sm font-semibold transition-all active:scale-[0.98] shadow-[0_8px_28px_rgba(34,240,255,0.22)] whitespace-nowrap"
-                >
-                  <Link2 className="w-4 h-4" />
-                  <span>Shorten a Link</span>
-                  <ArrowRight className="w-3.5 h-3.5 transition-transform duration-150 group-hover:translate-x-0.5" />
-                </button>
+                <MagneticShell strength={5}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                      if (reduced) {
+                        document
+                          .getElementById('link-creator-section')
+                          ?.scrollIntoView({ behavior: 'auto', block: 'start' });
+                      } else {
+                        triggerCosmicBurst(0.8);
+                        requestSmoothScrollTo('#link-creator-section', -92);
+                      }
+                    }}
+                    className="group relative overflow-hidden inline-flex items-center gap-2 min-h-[44px] px-5 py-2.5 rounded-xl bg-white hover:bg-cyan-50 text-[#020813] text-xs sm:text-sm font-semibold transition-all active:scale-[0.98] shadow-[0_8px_28px_rgba(34,240,255,0.22)] whitespace-nowrap"
+                  >
+                    <Link2 className="w-4 h-4" />
+                    <span>Shorten a Link</span>
+                    <ArrowRight className="w-3.5 h-3.5 transition-transform duration-150 group-hover:translate-x-0.5" />
+                  </button>
+                </MagneticShell>
 
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('analytics')}
-                  className="group inline-flex items-center gap-2 min-h-[44px] px-5 py-2.5 rounded-xl bg-[#041428]/85 hover:bg-[#07203d] border border-white/25 hover:border-cyan-300/60 text-white text-xs sm:text-sm font-medium transition-all active:scale-[0.98] whitespace-nowrap"
-                >
-                  <Globe2 className="w-4 h-4 text-cyan-300 transition-transform duration-200 group-hover:rotate-12" />
-                  <span>Explore Visitor Map</span>
-                </button>
+                <MagneticShell strength={4}>
+                  <button
+                    type="button"
+                    onClick={() => handleNavigateTab('analytics')}
+                    className="group inline-flex items-center gap-2 min-h-[44px] px-5 py-2.5 rounded-xl bg-[#041428]/85 hover:bg-[#07203d] border border-white/25 hover:border-cyan-300/60 text-white text-xs sm:text-sm font-medium transition-all active:scale-[0.98] whitespace-nowrap"
+                  >
+                    <Globe2 className="w-4 h-4 text-cyan-300 transition-transform duration-200 group-hover:rotate-12" />
+                    <span>Explore Visitor Map</span>
+                  </button>
+                </MagneticShell>
               </div>
 
               <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] text-white/75 font-mono tabular-nums pt-0.5">
@@ -255,7 +283,7 @@ export default function HomePage() {
       )}
 
       {/* Main Workspace Viewport */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+      <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
         <AnimatePresence mode="wait">
           {activeTab === 'shorten' && (
             <motion.div
@@ -264,101 +292,18 @@ export default function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="space-y-12"
             >
-              {/* Core Shortening Engine */}
-              <div id="link-creator-section" className="scroll-mt-20">
-                <LinkCreator
-                  userId={anonymousUserId}
-                  onLinkCreated={handleLinkCreated}
-                  onOpenQr={handleOpenQr}
-                />
-              </div>
-
-              {/* Interactive Feature Spotlight Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-                <SpotlightCard
-                  delay={0.04}
-                  spotlightColor="rgba(99, 102, 241, 0.16)"
-                  className="p-6 glass-surface border border-slate-200/80 dark:border-white/15 rounded-2xl hover:border-indigo-500/40 transition-colors"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-4 transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-3">
-                    <BarChart3 className="w-5 h-5" />
-                  </div>
-                  <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-1.5">
-                    Real-Time Analytics Engine
-                  </h3>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    Monitor link performance with live-polling telemetry. Track click volume, unique
-                    devices, and top referring networks in real time.
-                  </p>
-                </SpotlightCard>
-
-                <SpotlightCard
-                  delay={0.11}
-                  spotlightColor="rgba(16, 185, 129, 0.15)"
-                  className="p-6 glass-surface border border-slate-200/80 dark:border-white/15 rounded-2xl hover:border-emerald-500/40 transition-colors"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-4 transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3">
-                    <Globe2 className="w-5 h-5" />
-                  </div>
-                  <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-1.5">
-                    Geographic & Device Intelligence
-                  </h3>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    Discover where your audience resides with city and country level resolution, paired
-                    with operating system and hardware telemetry.
-                  </p>
-                </SpotlightCard>
-
-                <SpotlightCard
-                  delay={0.18}
-                  spotlightColor="rgba(14, 165, 233, 0.16)"
-                  className="p-6 glass-surface border border-slate-200/80 dark:border-white/15 rounded-2xl hover:border-sky-500/40 transition-colors"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-600 dark:text-sky-400 flex items-center justify-center mb-4 transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-3">
-                    <Lock className="w-5 h-5" />
-                  </div>
-                  <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-1.5">
-                    Hardened Safety & Passcodes
-                  </h3>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    Protect confidential destinations with custom passcodes. Built-in SSRF blocklists
-                    stop local subnet attacks before redirection occurs.
-                  </p>
-                </SpotlightCard>
-              </div>
-
-              {/* Recent Links Preview */}
-              {links.length > 0 && (
-                <div className="space-y-4 pt-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                        Your Recent Shortened Links
-                      </h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Manage active shortcuts and view quick click counts
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setActiveTab('dashboard')}
-                      className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 whitespace-nowrap"
-                    >
-                      <span>View All ({links.length})</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-
-                  <LinksTable
-                    links={links.slice(0, 5)}
-                    onOpenQr={handleOpenQr}
-                    onLinkDeleted={handleLinkDeleted}
-                    onLinkUpdated={handleLinkUpdated}
-                    onSelectLinkForAnalytics={handleSelectLinkForAnalytics}
-                  />
-                </div>
-              )}
+              <ScrollMorphWorkspace
+                stageStateRef={stageStateRef}
+                anonymousUserId={anonymousUserId}
+                links={links}
+                onLinkCreated={handleLinkCreated}
+                onLinkDeleted={handleLinkDeleted}
+                onLinkUpdated={handleLinkUpdated}
+                onOpenQr={handleOpenQr}
+                onSelectLinkForAnalytics={handleSelectLinkForAnalytics}
+                onNavigateTab={handleNavigateTab}
+              />
             </motion.div>
           )}
 
@@ -394,7 +339,7 @@ export default function HomePage() {
                   </div>
                 </div>
                 <button
-                  onClick={() => setActiveTab('shorten')}
+                  onClick={() => handleNavigateTab('shorten')}
                   className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white rounded-xl text-xs font-medium transition-all shadow-md shadow-indigo-500/25 self-start sm:self-auto whitespace-nowrap"
                 >
                   <Link2 className="w-3.5 h-3.5" />
@@ -446,7 +391,7 @@ export default function HomePage() {
       </main>
 
       {/* Glass Footer */}
-      <footer className="mt-16 border-t border-slate-200/70 dark:border-white/10 bg-white/60 dark:bg-slate-950/60 backdrop-blur-xl py-8 text-xs text-slate-500 dark:text-slate-400">
+      <footer className="relative z-10 mt-16 border-t border-slate-200/70 dark:border-white/10 bg-white/60 dark:bg-slate-950/60 backdrop-blur-xl py-8 text-xs text-slate-500 dark:text-slate-400">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <span className="font-semibold text-slate-800 dark:text-slate-200">LinkPulse</span>
@@ -456,7 +401,7 @@ export default function HomePage() {
 
           <div className="flex items-center gap-4 text-xs">
             <button
-              onClick={() => setActiveTab('security')}
+              onClick={() => handleNavigateTab('security')}
               className="hover:text-slate-900 dark:hover:text-white transition-colors"
             >
               Security Policy
