@@ -12,9 +12,12 @@ import {
 
 function noCacheRedirect(target: string | URL, status: 302 | 307 = 307): NextResponse {
   const response = NextResponse.redirect(target, { status });
-  response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private, max-age=0');
+  response.headers.set('CDN-Cache-Control', 'no-store');
+  response.headers.set('Vercel-CDN-Cache-Control', 'no-store');
   response.headers.set('Pragma', 'no-cache');
   response.headers.set('Expires', '0');
+  response.headers.set('Vary', 'User-Agent');
   response.headers.set('X-Content-Type-Options', 'nosniff');
   return response;
 }
@@ -69,7 +72,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ code
       );
     }
 
-    // Serve destination-aware OpenGraph metadata directly to link-preview crawlers (WhatsApp, Telegram, Slack, etc.)
+    const nextPath = link.passwordHash
+      ? `/unlock/${encodeURIComponent(code)}`
+      : `/verify-location/${encodeURIComponent(code)}`;
+
+    // Serve destination-aware OpenGraph metadata to non-interactive link-preview bots (WhatsApp, Telegram, Slack, etc.)
+    // Strictly never cached at CDN edge (no-store + Vary: User-Agent) so real browsers always get the 307 redirect,
+    // and includes a JS redirect + interactive fallback link in case any in-app WebView renders it.
     const userAgent = req.headers.get('user-agent');
     if (isSocialPreviewCrawler(userAgent)) {
       const preview = await resolveLinkSocialPreview(link, req.url);
@@ -77,6 +86,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ code
       const safeDesc = escapeHtmlAttr(preview.description);
       const safeSite = escapeHtmlAttr(preview.siteName);
       const safeCanonical = escapeHtmlAttr(preview.canonicalUrl || req.url);
+      const safeNextHref = escapeHtmlAttr(nextPath);
       const imageMeta = preview.imageUrl
         ? `<meta property="og:image" content="${escapeHtmlAttr(preview.imageUrl)}" />
   <meta name="twitter:image" content="${escapeHtmlAttr(preview.imageUrl)}" />
@@ -87,6 +97,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ code
 <html lang="en">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${safeTitle}</title>
   <meta name="description" content="${safeDesc}" />
   <meta property="og:type" content="website" />
@@ -97,9 +108,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ code
   ${imageMeta}
   <meta name="twitter:title" content="${safeTitle}" />
   <meta name="twitter:description" content="${safeDesc}" />
+  <script>window.location.replace(${JSON.stringify(nextPath)});</script>
 </head>
-<body>
-  <p>${safeTitle}</p>
+<body style="margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#090b10;color:#e2e8f0;font-family:system-ui,-apple-system,sans-serif;padding:24px;text-align:center;">
+  <div style="max-width:420px;width:100%;padding:28px 24px;border-radius:16px;background:rgba(15,23,42,0.85);border:1px solid rgba(148,163,184,0.2);">
+    <p style="margin:0 0 8px;font-size:15px;font-weight:600;color:#fff;">${safeTitle}</p>
+    <p style="margin:0 0 20px;font-size:13px;color:#94a3b8;line-height:1.5;">${safeDesc}</p>
+    <a href="${safeNextHref}" style="display:inline-block;padding:11px 20px;border-radius:10px;background:#4f46e5;color:#fff;text-decoration:none;font-size:14px;font-weight:600;">Continue to Link</a>
+  </div>
 </body>
 </html>`;
 
@@ -107,19 +123,19 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ code
         status: 200,
         headers: {
           'Content-Type': 'text/html; charset=utf-8',
-          'Cache-Control': 'public, max-age=120',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, private, max-age=0',
+          'CDN-Cache-Control': 'no-store',
+          'Vercel-CDN-Cache-Control': 'no-store',
+          Pragma: 'no-cache',
+          Expires: '0',
+          Vary: 'User-Agent',
           'X-Content-Type-Options': 'nosniff',
         },
       });
     }
 
-    // If password-protected, direct user to unlock page (handles passcode + optional GPS)
-    if (link.passwordHash) {
-      return noCacheRedirect(new URL(`/unlock/${encodeURIComponent(code)}`, req.url));
-    }
-
-    // Route visitors through the browser location permission & disclaimer gate
-    return noCacheRedirect(new URL(`/verify-location/${encodeURIComponent(code)}`, req.url));
+    // Route visitors through passcode unlock or browser location permission & disclaimer gate
+    return noCacheRedirect(new URL(nextPath, req.url));
   } catch (err) {
     console.error('Redirection error:', err);
     const codeParam = /^[a-zA-Z0-9_-]{3,32}$/.test(shortCodeForError)

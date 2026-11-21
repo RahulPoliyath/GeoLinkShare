@@ -772,12 +772,27 @@ export function generateDomainBrandedSlug(normalizedUrl: string, randomLength = 
 
 /**
  * Detect social messaging & OpenGraph preview crawlers (WhatsApp, Telegram, Slack, Discord, Facebook, X, LinkedIn).
+ * Never matches standard interactive mobile/desktop browsers unless a dedicated crawler bot token is present.
  */
 export function isSocialPreviewCrawler(userAgent: string | null): boolean {
   if (!userAgent) return false;
-  return /WhatsApp|facebookexternalhit|Facebot|Twitterbot|TelegramBot|Slackbot|Discordbot|LinkedInBot|SkypeUriPreview|Pinterest|Applebot|Viber|Snapchat|Line/i.test(
+  // Standard interactive Chrome/Safari/Firefox browsers are never link preview scrapers
+  // unless an explicit bot signature like Twitterbot/Discordbot/Slackbot/facebookexternalhit/TelegramBot is present.
+  const explicitBotPattern =
+    /WhatsApp\/|facebookexternalhit|Facebot|Twitterbot|TelegramBot|Slackbot|Discordbot|LinkedInBot|SkypeUriPreview|Pinterestbot|Applebot/i;
+  if (explicitBotPattern.test(userAgent)) {
+    return true;
+  }
+
+  // Fallback for bare WhatsApp/Viber/Line scraper UAs without Chrome/Safari interactive tokens
+  const isInteractiveBrowser = /Chrome\/|CriOS\/|FxiOS\/|Edg\/|EdgiOS\/|SamsungBrowser\//i.test(
     userAgent
   );
+  if (isInteractiveBrowser) {
+    return false;
+  }
+
+  return /\b(?:WhatsApp|Viber|Line\/|Snapchat)\b/i.test(userAgent);
 }
 
 const RESERVED_USERNAMES = new Set([

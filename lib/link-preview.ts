@@ -214,7 +214,10 @@ export async function resolveLinkSocialPreview(
   const ytVideoId = extractYouTubeVideoId(link.originalUrl);
 
   if (ytVideoId || brand.brandSlug === 'youtube') {
-    const ytData = await fetchYouTubeOembed(link.originalUrl);
+    const oembedTarget = ytVideoId
+      ? `https://www.youtube.com/watch?v=${ytVideoId}`
+      : link.originalUrl;
+    const ytData = await fetchYouTubeOembed(oembedTarget);
     const ytImage =
       ytData?.thumbnailUrl ||
       (ytVideoId ? `https://i.ytimg.com/vi/${ytVideoId}/hqdefault.jpg` : undefined);
