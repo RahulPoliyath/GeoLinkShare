@@ -56,37 +56,35 @@ export function SecuritySection() {
   return (
     <div className="w-full max-w-7xl mx-auto space-y-8">
       {/* Hero Banner */}
-      <div className="relative rounded-3xl overflow-hidden border border-slate-200/80 dark:border-white/15 bg-slate-950 shadow-xl">
-        <div className="relative h-64 sm:h-72 w-full">
-          <Image
-            src="/images/auth_hero_preview_1794445483732.jpg"
-            alt="Security Architecture Dashboard Preview"
-            fill
-            className="object-cover opacity-50"
-            referrerPolicy="no-referrer"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent" />
-          <div className="absolute inset-0 p-6 sm:p-10 flex flex-col justify-center max-w-2xl">
-            <div className="inline-flex items-center gap-2 text-sky-300 text-xs font-semibold tracking-wider mb-3 w-fit">
-              <ShieldCheck className="w-3.5 h-3.5 text-sky-400" />
-              <span>Hardened Security Architecture</span>
-            </div>
-            <MaskedReveal>
-              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mb-2 text-balance">
-                Defense-in-Depth Link Shortening
-              </h2>
-            </MaskedReveal>
-            <p className="text-sm text-slate-300 leading-relaxed">
-              Every link shortened and click recorded traverses defensive protocol sanitizers,
-              128-bit workspace isolation, and rate-limited firewalls built for instant open
-              access without compromising safety.
-            </p>
+      <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-200/80 dark:border-white/15 bg-slate-950 shadow-xl min-h-[230px] sm:min-h-[280px] flex items-center">
+        <Image
+          src="/images/auth_hero_preview_1794445483732.jpg"
+          alt="Security Architecture Dashboard Preview"
+          fill
+          className="object-cover opacity-50"
+          referrerPolicy="no-referrer"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/85 to-slate-950/30" />
+        <div className="relative z-10 p-5 sm:p-10 flex flex-col justify-center max-w-2xl">
+          <div className="inline-flex items-center gap-2 text-sky-300 text-xs font-semibold tracking-wider mb-2.5 sm:mb-3 w-fit">
+            <ShieldCheck className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+            <span>Hardened Security Architecture</span>
           </div>
+          <MaskedReveal>
+            <h2 className="text-xl sm:text-3xl font-bold tracking-tight text-white mb-2 text-balance">
+              Defense-in-Depth Link Shortening
+            </h2>
+          </MaskedReveal>
+          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            Every link shortened and click recorded traverses defensive protocol sanitizers,
+            128-bit workspace isolation, and rate-limited firewalls built for instant open
+            access without compromising safety.
+          </p>
         </div>
       </div>
 
       {/* Security Pillars Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
         {securityPillars.map((pillar, idx) => (
           <SpotlightCard
             key={pillar.title}
@@ -94,7 +92,7 @@ export function SecuritySection() {
             showReticles
             spotlightColor="rgba(99, 102, 241, 0.15)"
             borderGlowColor="rgba(56, 189, 248, 0.5)"
-            className="glass-surface border border-slate-200/80 dark:border-white/15 rounded-2xl p-5 hover:border-indigo-500/35 transition-colors"
+            className="glass-surface border border-slate-200/80 dark:border-white/15 rounded-2xl p-4 sm:p-5 hover:border-indigo-500/35 transition-colors"
           >
             <div className="flex items-center justify-between mb-3">
               <div className="p-2 rounded-xl bg-white/75 dark:bg-white/5 border border-slate-200/70 dark:border-white/10 transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-3">
@@ -115,7 +113,7 @@ export function SecuritySection() {
       </div>
 
       {/* Active Defense Controls */}
-      <div className="glass-surface border border-slate-200/80 dark:border-white/15 rounded-2xl p-6">
+      <div className="glass-surface border border-slate-200/80 dark:border-white/15 rounded-2xl p-4 sm:p-6">
         <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">
           Active Defense Invariants
         </h3>

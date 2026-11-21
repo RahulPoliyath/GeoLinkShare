@@ -876,7 +876,7 @@ export function HeroGlobeWebGL({
 
   return (
     <section
-      aria-label="LinkPulse 3D Geographic Telemetry Hero"
+      aria-label="XrGeoLink 3D Geographic Telemetry Hero"
       className="relative w-full overflow-hidden bg-[#020812] text-white border-b border-cyan-500/20"
     >
       {/* Dedicated WebGL Mount Container (never mixes React HUD children) */}

@@ -760,7 +760,7 @@ export function generateRandomSlug(length = 6): string {
 
 const RESERVED_USERNAMES = new Set([
   'admin', 'administrator', 'root', 'system', 'support', 'security',
-  'linkpulse', 'moderator', 'staff', 'api', 'auth', 'null', 'undefined',
+  'linkpulse', 'xrgeolink', 'moderator', 'staff', 'api', 'auth', 'null', 'undefined',
 ]);
 
 /**

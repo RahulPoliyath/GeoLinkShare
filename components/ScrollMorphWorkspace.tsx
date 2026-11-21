@@ -67,7 +67,7 @@ function TransitionBridge({
     <div
       id={id}
       data-transition-bridge
-      className="relative min-h-[42vh] sm:min-h-[50vh] flex items-center justify-center py-10 px-4 select-none"
+      className="relative min-h-[34vh] sm:min-h-[44vh] lg:min-h-[50vh] flex items-center justify-center py-8 sm:py-10 px-3 sm:px-4 select-none"
     >
       {/* Subtle vertical guide axis leaving center viewport wide open for the cosmic starlight & supernova burst */}
       <div
@@ -75,12 +75,12 @@ function TransitionBridge({
         className="pointer-events-none absolute inset-y-4 left-1/2 -translate-x-1/2 w-px bg-gradient-to-b from-transparent via-slate-400/30 dark:via-cyan-400/25 to-transparent"
       />
 
-      <div className="relative z-10 flex flex-col items-center text-center gap-3.5 max-w-md">
+      <div className="relative z-10 flex flex-col items-center text-center gap-3 sm:gap-3.5 max-w-md w-full">
         <div
-          className={`inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full border stage-panel text-[11px] font-mono tracking-wide ${accentClass}`}
+          className={`inline-flex flex-wrap items-center justify-center gap-1.5 sm:gap-2.5 px-3 sm:px-3.5 py-1.5 rounded-full border stage-panel text-[10px] sm:text-[11px] font-mono tracking-wide ${accentClass}`}
         >
           <span className="opacity-70">{fromLabel}</span>
-          <ArrowRight className="w-3 h-3 opacity-80" />
+          <ArrowRight className="w-3 h-3 opacity-80 shrink-0" />
           <span className="font-semibold">{toLabel}</span>
         </div>
 
@@ -409,57 +409,57 @@ export function ScrollMorphWorkspace({
             hoverLift={false}
             spotlightColor="rgba(99, 102, 241, 0.16)"
             borderGlowColor="rgba(99, 102, 241, 0.65)"
-            className="stage-panel border border-indigo-500/20 dark:border-indigo-400/20 rounded-3xl p-6 sm:p-10"
+            className="stage-panel border border-indigo-500/20 dark:border-indigo-400/20 rounded-2xl sm:rounded-3xl p-4 sm:p-7 lg:p-10"
           >
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-              <div className="lg:col-span-7 space-y-5">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center">
+              <div className="lg:col-span-7 space-y-4 sm:space-y-5">
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-2xl bg-indigo-500/12 border border-indigo-500/25 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                  <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-indigo-500/12 border border-indigo-500/25 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
                     <BarChart3 className="w-5 h-5" />
                   </div>
-                  <div className="space-y-0.5">
-                    <span className="font-mono text-[11px] uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
+                  <div className="space-y-0.5 min-w-0">
+                    <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-widest text-indigo-600 dark:text-indigo-400 block">
                       Chapter 01 · Telemetry Core
                     </span>
-                    <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
                       Real-Time Analytics Engine
                     </h2>
                   </div>
                 </div>
 
-                <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl">
+                <p className="text-xs sm:text-sm lg:text-base text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl">
                   Monitor link performance with live-polling telemetry. Track verified redirect
                   volume, unique visitor browsers, referring networks, and instant click streams in
                   real time without waiting for batch reports.
                 </p>
 
-                <div className="grid grid-cols-3 gap-3 pt-1">
-                  <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/80 dark:bg-white/[0.03] p-3.5">
+                <div className="grid grid-cols-1 min-[360px]:grid-cols-3 gap-2.5 sm:gap-3 pt-1">
+                  <div className="rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/80 dark:bg-white/[0.03] p-3 sm:p-3.5">
                     <div className="text-[11px] text-slate-500 dark:text-slate-400">Saved Links</div>
-                    <div className="text-xl font-bold text-slate-900 dark:text-white mt-0.5">
+                    <div className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mt-0.5">
                       <AnimatedNumber value={workspaceStats.totalLinks} />
                     </div>
                   </div>
-                  <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/80 dark:bg-white/[0.03] p-3.5">
+                  <div className="rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/80 dark:bg-white/[0.03] p-3 sm:p-3.5">
                     <div className="text-[11px] text-slate-500 dark:text-slate-400">Verified Clicks</div>
-                    <div className="text-xl font-bold text-indigo-600 dark:text-indigo-400 mt-0.5">
+                    <div className="text-lg sm:text-xl font-bold text-indigo-600 dark:text-indigo-400 mt-0.5">
                       <AnimatedNumber value={workspaceStats.totalClicks} />
                     </div>
                   </div>
-                  <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/80 dark:bg-white/[0.03] p-3.5">
+                  <div className="rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/80 dark:bg-white/[0.03] p-3 sm:p-3.5">
                     <div className="text-[11px] text-slate-500 dark:text-slate-400">Active Routes</div>
-                    <div className="text-xl font-bold text-slate-900 dark:text-white mt-0.5">
+                    <div className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mt-0.5">
                       <AnimatedNumber value={workspaceStats.activeLinks} />
                     </div>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3 pt-2">
+                <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 pt-1 sm:pt-2">
                   <MagneticShell strength={5}>
                     <button
                       type="button"
                       onClick={() => onNavigateTab('analytics')}
-                      className="group inline-flex items-center gap-2 min-h-[44px] px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-semibold transition-all shadow-lg shadow-indigo-500/25 active:scale-[0.98] whitespace-nowrap"
+                      className="group inline-flex items-center gap-2 min-h-[42px] sm:min-h-[44px] px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-semibold transition-all shadow-lg shadow-indigo-500/25 active:scale-[0.98] whitespace-nowrap"
                     >
                       <BarChart3 className="w-4 h-4" />
                       <span>Open Live Analytics</span>
@@ -470,7 +470,7 @@ export function ScrollMorphWorkspace({
                   <button
                     type="button"
                     onClick={() => requestSmoothScrollTo('#link-creator-section', -92)}
-                    className="inline-flex items-center gap-2 min-h-[44px] px-4 py-2.5 rounded-xl border border-slate-200/90 dark:border-white/15 bg-white/80 dark:bg-white/[0.04] hover:border-indigo-500/45 text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-medium transition-all whitespace-nowrap"
+                    className="inline-flex items-center gap-2 min-h-[42px] sm:min-h-[44px] px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-slate-200/90 dark:border-white/15 bg-white/80 dark:bg-white/[0.04] hover:border-indigo-500/45 text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-medium transition-all whitespace-nowrap"
                   >
                     <Link2 className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
                     <span>Create Tracked Link</span>
@@ -480,8 +480,8 @@ export function ScrollMorphWorkspace({
 
               {/* Interactive Telemetry Spectrum Preview */}
               <div className="lg:col-span-5">
-                <div className="rounded-2xl border border-indigo-500/20 dark:border-indigo-400/20 bg-slate-950/[0.03] dark:bg-[#040918] p-5 space-y-4">
-                  <div className="flex items-center justify-between text-xs">
+                <div className="rounded-2xl border border-indigo-500/20 dark:border-indigo-400/20 bg-slate-950/[0.03] dark:bg-[#040918] p-4 sm:p-5 space-y-3 sm:space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                     <span className="font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                       <Cpu className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
                       <span>Route Throughput Matrix</span>
@@ -493,7 +493,7 @@ export function ScrollMorphWorkspace({
                     </span>
                   </div>
 
-                  <div className="h-44 flex items-end justify-between gap-2.5 pt-4 px-1">
+                  <div className="h-32 sm:h-44 flex items-end justify-between gap-1.5 sm:gap-2.5 pt-3 sm:pt-4 px-0.5 sm:px-1">
                     {spectrumBars.map((bar, idx) => {
                       const active = hoveredBar === idx;
                       return (
@@ -558,12 +558,12 @@ export function ScrollMorphWorkspace({
             hoverLift={false}
             spotlightColor="rgba(16, 185, 129, 0.16)"
             borderGlowColor="rgba(16, 185, 129, 0.65)"
-            className="stage-panel border border-emerald-500/20 dark:border-emerald-400/20 rounded-3xl p-6 sm:p-10"
+            className="stage-panel border border-emerald-500/20 dark:border-emerald-400/20 rounded-2xl sm:rounded-3xl p-4 sm:p-7 lg:p-10"
           >
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center">
               {/* Interactive Spatial Capability Visual */}
               <div className="lg:col-span-5 order-2 lg:order-1">
-                <div className="rounded-2xl border border-emerald-500/20 dark:border-emerald-400/20 bg-slate-950/[0.03] dark:bg-[#031312]/80 p-5 space-y-4">
+                <div className="rounded-2xl border border-emerald-500/20 dark:border-emerald-400/20 bg-slate-950/[0.03] dark:bg-[#031312]/80 p-4 sm:p-5 space-y-3 sm:space-y-4">
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                       <Radar className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
@@ -617,33 +617,33 @@ export function ScrollMorphWorkspace({
                 </div>
               </div>
 
-              <div className="lg:col-span-7 order-1 lg:order-2 space-y-5">
+              <div className="lg:col-span-7 order-1 lg:order-2 space-y-4 sm:space-y-5">
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-2xl bg-emerald-500/12 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                  <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-emerald-500/12 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                     <Compass className="w-5 h-5" />
                   </div>
-                  <div className="space-y-0.5">
-                    <span className="font-mono text-[11px] uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                  <div className="space-y-0.5 min-w-0">
+                    <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-widest text-emerald-600 dark:text-emerald-400 block">
                       Chapter 02 · Spatial Intelligence
                     </span>
-                    <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
                       Geographic &amp; Device Intelligence
                     </h2>
                   </div>
                 </div>
 
-                <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl">
+                <p className="text-xs sm:text-sm lg:text-base text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl">
                   Discover where your audience resides with interactive map visualization, city and
                   country resolution, and optional high-precision geolocation permission flows—paired
                   with operating system and hardware telemetry.
                 </p>
 
-                <div className="flex flex-wrap items-center gap-3 pt-2">
+                <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 pt-1 sm:pt-2">
                   <MagneticShell strength={5}>
                     <button
                       type="button"
                       onClick={() => onNavigateTab('analytics')}
-                      className="group inline-flex items-center gap-2 min-h-[44px] px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-semibold transition-all shadow-lg shadow-emerald-500/25 active:scale-[0.98] whitespace-nowrap"
+                      className="group inline-flex items-center gap-2 min-h-[42px] sm:min-h-[44px] px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-semibold transition-all shadow-lg shadow-emerald-500/25 active:scale-[0.98] whitespace-nowrap"
                     >
                       <Globe2 className="w-4 h-4" />
                       <span>Explore Visitor Map</span>
@@ -654,7 +654,7 @@ export function ScrollMorphWorkspace({
                   <button
                     type="button"
                     onClick={() => triggerCosmicBurst(1.4)}
-                    className="inline-flex items-center gap-2 min-h-[44px] px-4 py-2.5 rounded-xl border border-slate-200/90 dark:border-white/15 bg-white/80 dark:bg-white/[0.04] hover:border-emerald-500/45 text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-medium transition-all whitespace-nowrap"
+                    className="inline-flex items-center gap-2 min-h-[42px] sm:min-h-[44px] px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-slate-200/90 dark:border-white/15 bg-white/80 dark:bg-white/[0.04] hover:border-emerald-500/45 text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-medium transition-all whitespace-nowrap"
                   >
                     <Layers className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
                     <span>Pulse Starfield</span>
@@ -688,25 +688,25 @@ export function ScrollMorphWorkspace({
             hoverLift={false}
             spotlightColor="rgba(14, 165, 233, 0.17)"
             borderGlowColor="rgba(56, 189, 248, 0.65)"
-            className="stage-panel border border-sky-500/20 dark:border-sky-400/20 rounded-3xl p-6 sm:p-10"
+            className="stage-panel border border-sky-500/20 dark:border-sky-400/20 rounded-2xl sm:rounded-3xl p-4 sm:p-7 lg:p-10"
           >
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-              <div className="lg:col-span-7 space-y-5">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center">
+              <div className="lg:col-span-7 space-y-4 sm:space-y-5">
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-2xl bg-sky-500/12 border border-sky-500/25 text-sky-600 dark:text-sky-400 flex items-center justify-center">
+                  <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-sky-500/12 border border-sky-500/25 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
                     <Lock className="w-5 h-5" />
                   </div>
-                  <div className="space-y-0.5">
-                    <span className="font-mono text-[11px] uppercase tracking-widest text-sky-600 dark:text-sky-400">
+                  <div className="space-y-0.5 min-w-0">
+                    <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-widest text-sky-600 dark:text-sky-400 block">
                       Chapter 03 · Zero-Trust Perimeter
                     </span>
-                    <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
                       Hardened Safety &amp; Passcodes
                     </h2>
                   </div>
                 </div>
 
-                <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl">
+                <p className="text-xs sm:text-sm lg:text-base text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl">
                   Protect confidential destinations with salted 12-round bcrypt passcodes. Built-in
                   SSRF blocklists intercept loopback and internal subnet targets before redirection
                   ever occurs, backed by HMAC-signed safe-use enforcement.
@@ -814,11 +814,11 @@ export function ScrollMorphWorkspace({
         <section
           data-focus-chapter
           data-chapter-last="true"
-          className="space-y-4 pt-20 pb-8"
+          className="space-y-4 pt-10 sm:pt-20 pb-6 sm:pb-8"
         >
-          <div className="flex items-center justify-between stage-panel border border-slate-200/80 dark:border-white/15 rounded-2xl px-5 py-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 stage-panel border border-slate-200/80 dark:border-white/15 rounded-2xl px-4 sm:px-5 py-3.5 sm:py-4">
             <div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+              <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
                 Your Recent Shortened Links
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">

@@ -695,7 +695,7 @@ export function RefusedTerms3D({ onRetry, isRetrying = false }: RefusedTerms3DPr
     <div
       role="alert"
       aria-live="assertive"
-      className="fixed inset-0 z-[120] min-h-screen w-full overflow-y-auto bg-[#090308] text-white select-none"
+      className="fixed inset-0 z-[120] min-h-[100dvh] w-full overflow-y-auto bg-[#090308] text-white select-none"
     >
       {/* Dedicated WebGL Mount Container (never mixes HUD children) */}
       {webglUnavailable ? (
@@ -730,16 +730,16 @@ export function RefusedTerms3D({ onRetry, isRetrying = false }: RefusedTerms3DPr
       </div>
 
       {/* Crisp Interactive Error Overlay (pointer-events-none wrapper lets user spin 3D lock freely) */}
-      <div className="relative z-10 pointer-events-none min-h-screen w-full max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 flex flex-col justify-between">
+      <div className="relative z-10 pointer-events-none min-h-[100dvh] w-full max-w-4xl mx-auto px-3 sm:px-6 py-5 sm:py-10 flex flex-col justify-between">
         {/* Top Error Header */}
-        <div className="text-center space-y-2.5 pt-2">
+        <div className="text-center space-y-2 pt-1">
           <motion.div
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-rose-300/95"
+            className="inline-flex items-center gap-2 text-[11px] sm:text-xs font-mono uppercase tracking-widest text-rose-300/95"
           >
-            <ShieldAlert className="w-4 h-4 text-rose-400" />
+            <ShieldAlert className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-400" />
             <span>Error 403 · Access Locked</span>
           </motion.div>
 
@@ -752,17 +752,17 @@ export function RefusedTerms3D({ onRetry, isRetrying = false }: RefusedTerms3DPr
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
-            className="text-sm sm:text-base text-rose-100/85 max-w-xl mx-auto [text-shadow:0_2px_14px_rgba(9,3,8,0.95)]"
+            className="text-xs sm:text-base text-rose-100/85 max-w-xl mx-auto [text-shadow:0_2px_14px_rgba(9,3,8,0.95)]"
           >
-            Access to LinkPulse is restricted until you accept the Safe-Use &amp; Liability
+            Access to XrGeoLink is restricted until you accept the Safe-Use &amp; Liability
             Disclaimer.
           </motion.p>
         </div>
 
         {/* Open Center Window for Interactive 3D Security Core */}
-        <div className="h-56 sm:h-72 lg:h-80 flex items-end justify-center pb-2" aria-hidden="true">
+        <div className="h-44 sm:h-64 lg:h-80 flex items-end justify-center pb-2" aria-hidden="true">
           {!webglUnavailable && (
-            <span className="text-[11px] font-mono tabular-nums text-rose-200/70 tracking-wide [text-shadow:0_2px_10px_rgba(9,3,8,0.95)]">
+            <span className="text-[10px] sm:text-[11px] font-mono tabular-nums text-rose-200/70 tracking-wide [text-shadow:0_2px_10px_rgba(9,3,8,0.95)]">
               Drag to rotate 3D security lock · Click core to pulse
               {pulseCount > 0 ? ` (${pulseCount})` : ''}
             </span>

@@ -200,20 +200,20 @@ export function LinkCreator({ userId, onLinkCreated, onOpenQr }: LinkCreatorProp
         showReticles
         spotlightColor="rgba(99, 102, 241, 0.14)"
         borderGlowColor="rgba(56, 189, 248, 0.45)"
-        className="glass-surface border border-slate-200/80 dark:border-white/15 rounded-3xl p-6 sm:p-8"
+        className="glass-surface border border-slate-200/80 dark:border-white/15 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8"
       >
         {/* Title & Description */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 mb-2">
-            <Sparkles className="w-4 h-4" />
+        <div className="mb-5 sm:mb-6">
+          <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 mb-1.5 sm:mb-2">
+            <Sparkles className="w-4 h-4 shrink-0" />
             <span className="text-xs font-semibold tracking-wide">
               High-Entropy URL Shortener
             </span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white text-balance">
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-slate-900 dark:text-white text-balance">
             Shorten, Protect, and Share Any Link
           </h2>
-          <p className="text-sm text-slate-600 dark:text-slate-300 mt-1.5 max-w-2xl">
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1.5 max-w-2xl">
             Generate tamper-proof shortened URLs with real-time click telemetry, country geographic
             intelligence, and automated QR codes.
           </p>

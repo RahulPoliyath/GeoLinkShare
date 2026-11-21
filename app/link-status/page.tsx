@@ -23,7 +23,7 @@ function StatusContent({ searchParams }: { searchParams: { [key: string]: string
     icon = <Clock className="w-8 h-8 text-rose-500 dark:text-rose-400" />;
   } else if (status === 'blocked' || status === 'invalid') {
     title = 'Destination Blocked';
-    description = 'This link failed LinkPulse security verification and has been blocked to protect visitors.';
+    description = 'This link failed XrGeoLink security verification and has been blocked to protect visitors.';
     icon = <ShieldAlert className="w-8 h-8 text-rose-500 dark:text-rose-400" />;
   } else if (status === 'error') {
     title = 'Redirect Service Unavailable';
@@ -60,7 +60,7 @@ function StatusContent({ searchParams }: { searchParams: { [key: string]: string
             className="inline-flex items-center gap-2 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Return to LinkPulse Home</span>
+            <span>Return to XrGeoLink Home</span>
           </Link>
         </div>
       </div>

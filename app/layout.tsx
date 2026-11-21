@@ -1,23 +1,29 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import '@fontsource-variable/plus-jakarta-sans';
 import '@fontsource-variable/jetbrains-mono';
 import './globals.css';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { AccessGate } from '@/components/AccessGate';
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+};
+
 export const metadata: Metadata = {
-  title: 'LinkPulse - Secure URL Shortener & Real-Time Analytics',
+  title: 'XrGeoLink - Secure URL Shortener & Real-Time Analytics',
   description:
     'High-security URL shortener with instant browser workspaces, tamper-proof redirection, geo-traffic telemetry, QR code generator, and real-time click analytics.',
   openGraph: {
-    title: 'LinkPulse - Secure URL Shortener & Real-Time Analytics',
+    title: 'XrGeoLink - Secure URL Shortener & Real-Time Analytics',
     description:
       'High-security URL shortener with instant browser workspaces, tamper-proof redirection, geo-traffic telemetry, QR code generator, and real-time click analytics.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'LinkPulse - Secure URL Shortener & Real-Time Analytics',
+    title: 'XrGeoLink - Secure URL Shortener & Real-Time Analytics',
     description:
       'High-security URL shortener with instant browser workspaces, tamper-proof redirection, geo-traffic telemetry, QR code generator, and real-time click analytics.',
   },

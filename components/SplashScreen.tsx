@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
-import { Link2, ShieldCheck, Crosshair, BarChart3 } from 'lucide-react';
+import { Globe2, ShieldCheck, Crosshair, BarChart3 } from 'lucide-react';
 import { AmbientBackdrop } from './AmbientBackdrop';
 
 const SPLASH_DURATION_MS = 6000;
@@ -84,17 +84,17 @@ export function SplashScreen({ onComplete }: SplashScreenProps = {}) {
     <AnimatePresence>
       {phase === 'active' && (
         <motion.div
-          key="linkpulse-splash"
+          key="xrgeolink-splash"
           role="status"
           aria-live="polite"
-          aria-label="Loading LinkPulse"
+          aria-label="Loading XrGeoLink"
           initial={{ opacity: 1 }}
           exit={{
             opacity: 0,
             scale: prefersReducedMotion ? 1 : 1.015,
             transition: { duration: EXIT_FADE_MS / 1000, ease: [0.16, 1, 0.3, 1] },
           }}
-          className="fixed inset-0 z-[100] flex flex-col items-center justify-center px-6 bg-slate-50 dark:bg-[#060913] text-slate-900 dark:text-slate-100 select-none overflow-hidden"
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center px-3 sm:px-6 bg-slate-50 dark:bg-[#060913] text-slate-900 dark:text-slate-100 select-none overflow-hidden"
         >
           {/* Living Hi-Tech Ambient Backdrop */}
           <AmbientBackdrop />
@@ -104,7 +104,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps = {}) {
             initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 14, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-            className="relative z-10 w-full max-w-md glass-surface border border-slate-200/80 dark:border-white/15 rounded-3xl p-8 sm:p-10 text-center overflow-hidden"
+            className="relative z-10 w-full max-w-md glass-surface border border-slate-200/80 dark:border-white/15 rounded-2xl sm:rounded-3xl p-5 sm:p-10 text-center overflow-hidden"
           >
             <div aria-hidden="true" className="pointer-events-none absolute inset-3.5">
               <span className="absolute top-0 left-0 w-2.5 h-2.5 border-t border-l border-indigo-400/50 dark:border-cyan-400/45" />
@@ -113,7 +113,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps = {}) {
               <span className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b border-r border-indigo-400/50 dark:border-cyan-400/45" />
             </div>
             {/* Brand Mark with Dual Counter-Rotating Orbital Rings */}
-            <div className="relative w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+            <div className="relative w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-5 sm:mb-6 flex items-center justify-center">
               {!prefersReducedMotion && (
                 <>
                   <motion.div
@@ -134,9 +134,10 @@ export function SplashScreen({ onComplete }: SplashScreenProps = {}) {
                 initial={prefersReducedMotion ? {} : { scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.45, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
-                className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-sky-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30"
+                className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-slate-950 via-[#071129] to-indigo-950 border border-cyan-400/40 flex items-center justify-center text-cyan-300 shadow-lg shadow-indigo-500/30"
               >
-                <Link2 className="w-7 h-7" />
+                <Globe2 className="w-6 h-6 sm:w-7 sm:h-7 stroke-[2]" />
+                <Crosshair className="w-3.5 h-3.5 text-white/90 absolute" />
               </motion.div>
             </div>
 
@@ -146,16 +147,19 @@ export function SplashScreen({ onComplete }: SplashScreenProps = {}) {
                 initial={prefersReducedMotion ? false : { y: '100%', opacity: 0 }}
                 animate={{ y: '0%', opacity: 1 }}
                 transition={{ duration: 0.55, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
-                className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white"
+                className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white"
               >
-                LinkPulse
+                <span className="bg-gradient-to-br from-indigo-600 via-cyan-500 to-sky-400 dark:from-cyan-300 dark:via-sky-300 dark:to-indigo-400 bg-clip-text text-transparent">
+                  Xr
+                </span>
+                GeoLink
               </motion.h1>
             </div>
             <motion.p
               initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
-              className="mt-2 text-sm text-slate-600 dark:text-slate-300 text-balance"
+              className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-300 text-balance"
             >
               Secure URL Shortening &amp; Real-Time Geographic Telemetry
             </motion.p>
@@ -165,7 +169,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps = {}) {
               initial={prefersReducedMotion ? false : { opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.45, delay: 0.3 }}
-              className="mt-6 flex items-center justify-center gap-4 text-xs text-slate-500 dark:text-slate-400"
+              className="mt-5 sm:mt-6 flex flex-wrap items-center justify-center gap-x-3 sm:gap-x-4 gap-y-1.5 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400"
             >
               <span className="inline-flex items-center gap-1.5">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />

@@ -465,7 +465,7 @@ export default function VerifyLocationPage({
 
         <div className="mt-7 pt-5 border-t border-slate-200/70 dark:border-white/10 flex items-center justify-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
           <ShieldCheck className="w-3.5 h-3.5 text-slate-400" />
-          <span>Protected by LinkPulse Location Gate</span>
+          <span>Protected by XrGeoLink Location Gate</span>
         </div>
       </motion.div>
     </div>

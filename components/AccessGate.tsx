@@ -12,7 +12,6 @@ import {
   AlertTriangle,
   ArrowRight,
   Lock,
-  ChevronDown,
   Eye,
   Check,
 } from 'lucide-react';
@@ -51,35 +50,38 @@ const SAFE_USE_CLAUSES = [
   {
     id: 'ethical-use',
     index: '01',
+    shortLabel: 'Safe Use',
     title: 'Safe & Ethical Usage',
     summary: 'Never create links intended for phishing, harassment, stalking, malware, or harming others.',
     details:
-      'Every shortened destination must serve a legitimate, non-harmful purpose. Any attempt to mask deceptive redirects, social-engineering lures, or abusive tracking violates safe-use policy and renders access void.',
+      'Every destination must serve a legitimate, non-harmful purpose. Deceptive redirects or abusive tracking render access void.',
     icon: CheckCircle2,
     accentIcon: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/12 border-emerald-500/25',
-    accentBorder: 'border-emerald-500/40',
+    accentBorder: 'border-emerald-500/45',
   },
   {
     id: 'user-responsibility',
     index: '02',
+    shortLabel: 'Liability',
     title: 'Full User Accountability',
     summary: 'You bear sole legal and ethical responsibility for every link you shorten and share.',
     details:
-      'You are exclusively responsible for verifying that shared destinations comply with local laws, intellectual property rights, and platform policies. The website developer assumes zero liability for user-generated links or misuse.',
+      'Verify destinations comply with applicable laws and policies. The developer assumes zero responsibility for user misuse.',
     icon: Scale,
     accentIcon: 'text-indigo-600 dark:text-indigo-400 bg-indigo-500/12 border-indigo-500/25',
-    accentBorder: 'border-indigo-500/40',
+    accentBorder: 'border-indigo-500/45',
   },
   {
     id: 'privacy-consent',
     index: '03',
-    title: 'Privacy & Visitor Transparency',
+    shortLabel: 'Privacy',
+    title: 'Privacy & Consent Transparency',
     summary: 'Respect visitor privacy and explicit location consent whenever enabling route telemetry.',
     details:
-      'Optional high-accuracy geolocation prompts visitors directly through native browser permissions with clear disclosure. You agree never to misrepresent consent flows or collect data unlawfully.',
+      'Optional GPS telemetry requests explicit browser permission with disclosure. Never misrepresent consent flows.',
     icon: Eye,
     accentIcon: 'text-sky-600 dark:text-sky-400 bg-sky-500/12 border-sky-500/25',
-    accentBorder: 'border-sky-500/40',
+    accentBorder: 'border-sky-500/45',
   },
 ] as const;
 
@@ -93,9 +95,9 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
   const [gatePhase, setGatePhase] = useState<GatePhase>('splash');
   const [challengeToken, setChallengeToken] = useState<string | null>(null);
   const [agreedToSafeUse, setAgreedToSafeUse] = useState(false);
-  const [expandedClauseId, setExpandedClauseId] = useState<string>('ethical-use');
+  const [activeClauseId, setActiveClauseId] = useState<string>('ethical-use');
   const [acknowledgedClauses, setAcknowledgedClauses] = useState<Record<string, boolean>>({
-    'ethical-use': false,
+    'ethical-use': true,
     'user-responsibility': false,
     'privacy-consent': false,
   });
@@ -178,12 +180,11 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
   }, []);
 
   const handleSelectClause = (id: string) => {
-    setExpandedClauseId((prev) => (prev === id ? '' : id));
+    setActiveClauseId(id);
     setAcknowledgedClauses((prev) => ({ ...prev, [id]: true }));
   };
 
-  const handleToggleClauseAck = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleToggleClauseAck = (id: string) => {
     setAcknowledgedClauses((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
@@ -199,6 +200,9 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
     if (errorMessage) setErrorMessage(null);
   };
 
+  const activeClause =
+    SAFE_USE_CLAUSES.find((c) => c.id === activeClauseId) || SAFE_USE_CLAUSES[0];
+  const ActiveClauseIcon = activeClause.icon;
   const acknowledgedCount = SAFE_USE_CLAUSES.filter((c) => acknowledgedClauses[c.id]).length;
   const progressPercent = agreedToSafeUse
     ? 100
@@ -334,7 +338,7 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
       role="dialog"
       aria-modal="true"
       aria-labelledby="disclaimer-heading"
-      className="min-h-screen w-full relative flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12 sm:py-16 bg-slate-50 dark:bg-[#060913] text-slate-900 dark:text-slate-100 overflow-y-auto"
+      className="h-[100dvh] w-full relative flex items-center justify-center p-2.5 sm:p-5 lg:p-8 bg-slate-50 dark:bg-[#060913] text-slate-900 dark:text-slate-100 overflow-hidden"
     >
       {/* Living Hi-Tech Ambient Backdrop */}
       <AmbientBackdrop />
@@ -346,58 +350,54 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
           showReticles
           spotlightColor="rgba(99, 102, 241, 0.14)"
           borderGlowColor="rgba(56, 189, 248, 0.5)"
-          className="relative z-10 w-full max-w-3xl glass-elevated border border-slate-200/80 dark:border-white/15 rounded-3xl p-7 sm:p-11 lg:p-12"
+          className="relative z-10 w-full max-w-3xl max-h-full overflow-hidden [@media(max-height:520px)]:overflow-y-auto glass-elevated border border-slate-200/80 dark:border-white/15 rounded-2xl sm:rounded-3xl p-3 sm:p-6 lg:p-8 flex flex-col justify-between"
         >
-          <div className="space-y-8 sm:space-y-9">
-            {/* 1. Header & Interactive Verification Progress */}
-            <header className="space-y-5">
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                <div className="flex items-start gap-4">
+          <div className="flex flex-col justify-between gap-2 sm:gap-4 lg:gap-5">
+            {/* 1. Compact Fluid Header & Progress Indicator */}
+            <header className="space-y-1.5 sm:space-y-3 shrink-0">
+              <div className="flex items-center justify-between gap-2.5 sm:gap-3">
+                <div className="flex items-center gap-2 sm:gap-3.5 min-w-0">
                   <motion.div
                     initial={{ scale: 0.85, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     whileHover={{ scale: 1.06, rotate: -3 }}
                     transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                    className="w-13 h-13 rounded-2xl bg-gradient-to-br from-indigo-600 to-sky-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/25"
+                    className="w-8 h-8 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-br from-indigo-600 to-sky-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/25"
                   >
-                    <ShieldCheck className="w-6 h-6" />
+                    <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
                   </motion.div>
 
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-2 text-[11px] font-mono uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                      <Lock className="w-3.5 h-3.5" />
-                      <span>Mandatory Safe-Use Gate</span>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-mono uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                      <Lock className="w-3 h-3 shrink-0" />
+                      <span className="truncate">Mandatory Safe-Use Gate</span>
                     </div>
                     <MaskedReveal delay={0.05}>
                       <h1
                         id="disclaimer-heading"
-                        className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight"
+                        className="text-[15px] min-[380px]:text-lg sm:text-2xl lg:text-[26px] font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight truncate"
                       >
                         Terms &amp; Safe-Use Disclaimer
                       </h1>
                     </MaskedReveal>
-                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed pt-0.5">
-                      Review each safety pillar below and confirm your agreement to unlock LinkPulse.
-                    </p>
                   </div>
                 </div>
 
-                {/* Live Consent Readiness Counter */}
-                <div className="self-start shrink-0 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/75 dark:bg-white/[0.04] px-4 py-2.5 text-right">
-                  <div className="text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                {/* Live Consent Readiness Pill */}
+                <div className="shrink-0 rounded-xl border border-slate-200/80 dark:border-white/10 bg-white/75 dark:bg-white/[0.04] px-2 sm:px-3.5 py-1 sm:py-1.5 text-right">
+                  <div className="hidden sm:block text-[9px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     Review Progress
                   </div>
-                  <div className="text-sm font-bold font-mono tabular-nums text-indigo-600 dark:text-cyan-300 mt-0.5">
-                    {agreedToSafeUse ? 'Ready · 100%' : `${acknowledgedCount}/${SAFE_USE_CLAUSES.length} Reviewed`}
+                  <div className="text-[10px] sm:text-xs font-bold font-mono tabular-nums text-indigo-600 dark:text-cyan-300 whitespace-nowrap">
+                    {agreedToSafeUse ? 'Ready · 100%' : `${acknowledgedCount}/${SAFE_USE_CLAUSES.length} Read`}
                   </div>
                 </div>
               </div>
 
-              {/* Smooth Progress Bar */}
-              <div className="h-1.5 w-full rounded-full bg-slate-200/80 dark:bg-white/10 overflow-hidden">
+              <div className="h-1 sm:h-1.5 w-full rounded-full bg-slate-200/80 dark:bg-white/10 overflow-hidden">
                 <motion.div
                   initial={false}
-                  animate={{ width: `${Math.max(8, progressPercent)}%` }}
+                  animate={{ width: `${Math.max(10, progressPercent)}%` }}
                   transition={{ type: 'spring', stiffness: 260, damping: 28 }}
                   className={`h-full rounded-full ${
                     agreedToSafeUse
@@ -411,131 +411,109 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
             {/* 2. Official Disclaimer Statement */}
             <section
               aria-label="Official disclaimer notice"
-              className="rounded-2xl bg-amber-50/90 dark:bg-amber-950/30 border border-amber-300/75 dark:border-amber-500/30 p-5 sm:p-7 space-y-3.5"
+              className="shrink-0 rounded-xl sm:rounded-2xl bg-amber-50/90 dark:bg-amber-950/30 border border-amber-300/75 dark:border-amber-500/30 p-2.5 sm:p-4 lg:p-5 space-y-1 sm:space-y-2"
             >
-              <div className="flex items-center gap-2.5 text-amber-800 dark:text-amber-300 text-xs font-semibold uppercase tracking-wide">
-                <AlertTriangle className="w-4 h-4 shrink-0" />
+              <div className="flex items-center gap-1.5 sm:gap-2 text-amber-800 dark:text-amber-300 text-[10px] sm:text-xs font-semibold uppercase tracking-wide">
+                <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                 <span>Official Disclaimer Notice</span>
               </div>
-              <p className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white leading-relaxed">
+              <p className="text-[11px] min-[380px]:text-xs sm:text-sm lg:text-[15px] font-semibold text-slate-900 dark:text-white leading-snug sm:leading-relaxed">
                 This website is strictly for safe use and must not be used to harm anyone. The
                 website developer is not responsible for any misuse.
               </p>
-              <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                By proceeding, you agree to comply with all applicable laws and respect user privacy
-                and consent whenever generating or sharing shortened URLs.
+              <p className="text-[10px] min-[380px]:text-[11px] sm:text-xs text-slate-700 dark:text-slate-300 leading-snug sm:leading-relaxed">
+                By proceeding, you agree to comply with applicable laws and respect visitor privacy
+                and explicit location consent.
               </p>
             </section>
 
-            {/* 3. Interactive Expandable Safe-Use Policy Pillars */}
-            <section aria-label="Safe-use commitments" className="space-y-4">
-              <div className="flex items-center justify-between px-1">
-                <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  Interactive Safety Commitments
-                </h2>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Click any item to expand details
-                </span>
-              </div>
-
-              <div className="space-y-3.5">
+            {/* 3. Interactive 3-Pillar Safety Commitments (Single-Frame Tabbed Inspector — Zero Vertical Bloat) */}
+            <section aria-label="Safe-use commitments" className="shrink-0 space-y-2 sm:space-y-2.5">
+              <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5" role="tablist" aria-label="Safety policy clauses">
                 {SAFE_USE_CLAUSES.map((clause) => {
-                  const Icon = clause.icon;
-                  const isExpanded = expandedClauseId === clause.id;
+                  const isActive = activeClauseId === clause.id;
                   const isAck = acknowledgedClauses[clause.id];
-
                   return (
-                    <motion.div
+                    <button
                       key={clause.id}
-                      layout
-                      transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
-                      className={`group rounded-2xl border p-4 sm:p-5 transition-colors ${
-                        isExpanded
-                          ? `bg-white/90 dark:bg-white/[0.07] ${clause.accentBorder} shadow-md shadow-slate-900/5 dark:shadow-black/30`
-                          : 'bg-white/65 dark:bg-white/[0.035] border-slate-200/80 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/25'
+                      type="button"
+                      role="tab"
+                      aria-selected={isActive}
+                      onClick={() => handleSelectClause(clause.id)}
+                      className={`relative flex items-center justify-center sm:justify-between gap-1.5 px-2 sm:px-3.5 py-2 rounded-xl border text-[11px] sm:text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
+                        isActive
+                          ? `bg-white dark:bg-white/10 ${clause.accentBorder} text-slate-900 dark:text-white shadow-xs`
+                          : 'bg-white/60 dark:bg-white/[0.03] border-slate-200/80 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-white/25'
                       }`}
                     >
-                      <div className="flex items-start justify-between gap-3 sm:gap-4">
-                        <button
-                          type="button"
-                          onClick={() => handleSelectClause(clause.id)}
-                          aria-expanded={isExpanded}
-                          className="flex-1 flex items-start gap-3.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded-xl"
-                        >
-                          <div
-                            className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 ${clause.accentIcon}`}
-                          >
-                            <Icon className="w-4 h-4" />
-                          </div>
-
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-mono text-[11px] text-slate-400 dark:text-slate-500">
-                                {clause.index}
-                              </span>
-                              <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
-                                {clause.title}
-                              </h3>
-                            </div>
-                            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                              {clause.summary}
-                            </p>
-                          </div>
-                        </button>
-
-                        <div className="flex items-center gap-2 shrink-0 pt-0.5">
-                          <button
-                            type="button"
-                            onClick={(e) => handleToggleClauseAck(clause.id, e)}
-                            aria-pressed={isAck}
-                            className={`px-2.5 py-1 rounded-lg text-[11px] font-medium border transition-all whitespace-nowrap ${
-                              isAck
-                                ? 'bg-emerald-500/15 border-emerald-500/35 text-emerald-700 dark:text-emerald-300'
-                                : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-indigo-400'
-                            }`}
-                          >
-                            {isAck ? 'Reviewed' : 'Mark Read'}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleSelectClause(clause.id)}
-                            aria-label={isExpanded ? `Collapse ${clause.title}` : `Expand ${clause.title}`}
-                            className="p-1 rounded-lg hover:bg-slate-200/60 dark:hover:bg-white/10 transition-colors"
-                          >
-                            <ChevronDown
-                              className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
-                                isExpanded ? 'rotate-180 text-indigo-500 dark:text-cyan-300' : ''
-                              }`}
-                            />
-                          </button>
-                        </div>
-                      </div>
-
-                      <AnimatePresence initial={false}>
-                        {isExpanded && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                            className="overflow-hidden"
-                          >
-                            <div className="mt-4 pt-3.5 sm:pl-14 border-t border-slate-200/70 dark:border-white/10 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                              {clause.details}
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </motion.div>
+                      <span className="flex items-center gap-1.5 truncate">
+                        <span className="font-mono text-[10px] opacity-60">{clause.index}</span>
+                        <span className="truncate">{clause.shortLabel}</span>
+                      </span>
+                      <span
+                        aria-hidden="true"
+                        className={`w-2 h-2 rounded-full shrink-0 transition-colors ${
+                          isAck
+                            ? 'bg-emerald-500'
+                            : 'bg-slate-300 dark:bg-slate-600'
+                        }`}
+                      />
+                    </button>
                   );
                 })}
               </div>
+
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeClause.id}
+                  role="tabpanel"
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+                  className={`rounded-xl sm:rounded-2xl border p-3 sm:p-4 bg-white/85 dark:bg-white/[0.05] ${activeClause.accentBorder}`}
+                >
+                  <div className="flex items-start justify-between gap-2.5 sm:gap-4">
+                    <div className="flex items-start gap-2.5 sm:gap-3 min-w-0">
+                      <div
+                        className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl border flex items-center justify-center shrink-0 mt-0.5 ${activeClause.accentIcon}`}
+                      >
+                        <ActiveClauseIcon className="w-4 h-4" />
+                      </div>
+                      <div className="space-y-0.5 sm:space-y-1 min-w-0">
+                        <h2 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white leading-tight">
+                          {activeClause.title}
+                        </h2>
+                        <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 leading-snug sm:leading-relaxed">
+                          {activeClause.summary}{' '}
+                          <span className="hidden sm:inline text-slate-500 dark:text-slate-400">
+                            {activeClause.details}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleToggleClauseAck(activeClause.id)}
+                      aria-pressed={acknowledgedClauses[activeClause.id]}
+                      className={`shrink-0 px-2.5 py-1 rounded-lg text-[10px] sm:text-[11px] font-medium border transition-all whitespace-nowrap ${
+                        acknowledgedClauses[activeClause.id]
+                          ? 'bg-emerald-500/15 border-emerald-500/35 text-emerald-700 dark:text-emerald-300'
+                          : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-indigo-400'
+                      }`}
+                    >
+                      {acknowledgedClauses[activeClause.id] ? 'Reviewed' : 'Mark Read'}
+                    </button>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
             </section>
 
             {/* 4. Explicit Consent Confirmation Toggle */}
-            <section aria-label="Consent confirmation" className="space-y-4">
+            <section aria-label="Consent confirmation" className="shrink-0 space-y-2">
               <label
-                className={`flex items-start gap-4 p-5 sm:p-6 rounded-2xl border cursor-pointer transition-all duration-200 ${
+                className={`flex items-start gap-3 p-3 sm:p-4 rounded-xl sm:rounded-2xl border cursor-pointer transition-all duration-200 ${
                   agreedToSafeUse
                     ? 'bg-indigo-50/85 dark:bg-indigo-950/35 border-indigo-500/50 shadow-sm shadow-indigo-500/10'
                     : 'bg-slate-100/80 dark:bg-white/[0.045] border-slate-200/90 dark:border-white/10 hover:border-indigo-500/40'
@@ -570,51 +548,50 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
                   </motion.span>
                 </div>
 
-                <div className="space-y-1 select-none">
-                  <div className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white leading-relaxed">
+                <div className="space-y-0.5 select-none">
+                  <div className="text-[11px] sm:text-xs lg:text-sm font-semibold text-slate-900 dark:text-white leading-snug sm:leading-relaxed">
                     I agree to use this website solely for safe purposes, not to harm anyone, and
                     acknowledge that the website developer is not responsible for any misuse.
                   </div>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  <p className="hidden min-[380px]:block text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400">
                     {agreedToSafeUse
-                      ? 'Consent confirmed — you may now enter the LinkPulse workspace.'
-                      : 'Required before entering LinkPulse. Refusing terms opens the restricted 3D view.'}
+                      ? 'Consent confirmed — ready to enter XrGeoLink.'
+                      : 'Check above to enable entry. Declining opens the restricted 3D view.'}
                   </p>
                 </div>
               </label>
 
-              {/* Inline Error Alert */}
               {errorMessage && (
-                <div className="rounded-xl bg-rose-500/10 border border-rose-500/30 px-4 py-3 flex items-center gap-2.5 text-xs text-rose-700 dark:text-rose-300">
-                  <ShieldAlert className="w-4 h-4 shrink-0" />
+                <div className="rounded-xl bg-rose-500/10 border border-rose-500/30 px-3 py-2 flex items-center gap-2 text-[11px] sm:text-xs text-rose-700 dark:text-rose-300">
+                  <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
                   <span>{errorMessage}</span>
                 </div>
               )}
             </section>
 
-            {/* 5. Spaced Decision Action Footer */}
-            <footer className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-4 pt-4 border-t border-slate-200/75 dark:border-white/10">
+            {/* 5. Responsive Decision Footer (Single-Row Side-by-Side Across Phones, Tablets & Laptops) */}
+            <footer className="shrink-0 grid grid-cols-2 sm:flex sm:items-center sm:justify-between gap-2.5 sm:gap-4 pt-2 sm:pt-3 border-t border-slate-200/75 dark:border-white/10">
               <button
                 type="button"
                 onClick={() => submitTermsDecision(false)}
                 disabled={submittingAction !== null}
-                className="min-h-[46px] inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-slate-200/80 dark:bg-white/10 hover:bg-rose-500/15 hover:text-rose-600 dark:hover:text-rose-300 border border-slate-300/70 dark:border-white/10 text-slate-700 dark:text-slate-200 text-sm font-medium transition-colors disabled:opacity-50 whitespace-nowrap"
+                className="min-h-[42px] sm:min-h-[46px] inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 rounded-xl bg-slate-200/80 dark:bg-white/10 hover:bg-rose-500/15 hover:text-rose-600 dark:hover:text-rose-300 border border-slate-300/70 dark:border-white/10 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-medium transition-colors disabled:opacity-50 whitespace-nowrap"
               >
-                <XCircle className="w-4 h-4" />
+                <XCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                 <span>{submittingAction === 'decline' ? 'Declining...' : 'Decline Terms'}</span>
               </button>
 
-              <MagneticShell strength={agreedToSafeUse ? 5 : 0}>
+              <MagneticShell strength={agreedToSafeUse ? 5 : 0} className="w-full sm:w-auto">
                 <button
                   type="button"
                   onClick={() => submitTermsDecision(true)}
                   disabled={!agreedToSafeUse || submittingAction !== null}
-                  className="group w-full sm:w-auto min-h-[46px] inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] disabled:bg-slate-300 dark:disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all shadow-lg shadow-indigo-500/25 disabled:shadow-none whitespace-nowrap"
+                  className="group w-full sm:w-auto min-h-[42px] sm:min-h-[46px] inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] disabled:bg-slate-300 dark:disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed text-white text-xs sm:text-sm font-semibold transition-all shadow-lg shadow-indigo-500/25 disabled:shadow-none whitespace-nowrap"
                 >
                   <span>
-                    {submittingAction === 'accept' ? 'Verifying Consent...' : 'Accept & Enter Website'}
+                    {submittingAction === 'accept' ? 'Verifying...' : 'Accept & Enter'}
                   </span>
-                  <ArrowRight className="w-4 h-4 transition-transform duration-150 group-hover:translate-x-0.5" />
+                  <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-150 group-hover:translate-x-0.5 shrink-0" />
                 </button>
               </MagneticShell>
             </footer>

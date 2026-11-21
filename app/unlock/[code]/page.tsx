@@ -179,7 +179,7 @@ export default function UnlockPage({ params }: { params: Promise<{ code: string 
 
         <div className="mt-8 pt-6 border-t border-slate-200/70 dark:border-white/10 flex items-center justify-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
           <ShieldCheck className="w-3.5 h-3.5 text-slate-400" />
-          <span>Encrypted with LinkPulse Security Engine</span>
+          <span>Encrypted with XrGeoLink Security Engine</span>
         </div>
       </motion.div>
     </div>

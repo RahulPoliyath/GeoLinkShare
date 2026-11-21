@@ -102,13 +102,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Prevent accidental redirect loops back to LinkPulse's own domain
+    // Prevent accidental redirect loops back to XrGeoLink's own domain
     const requestHost = req.headers.get('x-forwarded-host') || req.headers.get('host');
     if (isSelfRedirectLoop(urlValidation.normalizedUrl, requestHost)) {
       return NextResponse.json(
         {
           error:
-            'Destination URL points back to this LinkPulse website. Please enter the external target website URL you want to shorten.',
+            'Destination URL points back to this XrGeoLink website. Please enter the external target website URL you want to shorten.',
         },
         { status: 400 }
       );

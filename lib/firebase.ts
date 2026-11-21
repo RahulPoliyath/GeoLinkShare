@@ -124,7 +124,7 @@ if (typeof window !== 'undefined') {
 
 const RESERVED_HANDLES = new Set([
   'admin', 'administrator', 'root', 'system', 'support',
-  'security', 'linkpulse', 'moderator', 'staff', 'api', 'auth',
+  'security', 'linkpulse', 'xrgeolink', 'moderator', 'staff', 'api', 'auth',
 ]);
 
 function sanitizeSafeText(raw: string, maxLen: number, fallback: string): string {

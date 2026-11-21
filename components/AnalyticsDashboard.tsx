@@ -322,13 +322,13 @@ export function AnalyticsDashboard({ links }: AnalyticsDashboardProps) {
         </div>
 
         {/* Filter & Live Switch */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/75 dark:bg-slate-950/60 border border-slate-200/80 dark:border-white/15 rounded-xl text-xs">
-            <Filter className="w-3.5 h-3.5 text-slate-400" />
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 min-w-0">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/75 dark:bg-slate-950/60 border border-slate-200/80 dark:border-white/15 rounded-xl text-xs max-w-full min-w-0 flex-1 sm:flex-initial">
+            <Filter className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             <select
               value={selectedLinkId}
               onChange={(e) => setSelectedLinkId(e.target.value)}
-              className="bg-transparent text-slate-700 dark:text-slate-200 font-medium focus:outline-none"
+              className="bg-transparent text-slate-700 dark:text-slate-200 font-medium focus:outline-none w-full max-w-[220px] sm:max-w-[260px] truncate"
             >
               <option
                 value="all"
@@ -371,13 +371,13 @@ export function AnalyticsDashboard({ links }: AnalyticsDashboardProps) {
       </div>
 
       {/* KPI 4-Card Strip with Dual-Layer Optical Spotlight & Animated Counters */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <SpotlightCard
           delay={0.02}
           showReticles
           spotlightColor="rgba(99, 102, 241, 0.16)"
           borderGlowColor="rgba(99, 102, 241, 0.55)"
-          className="glass-surface border border-slate-200/80 dark:border-white/15 rounded-2xl p-5 hover:border-indigo-500/35 transition-colors"
+          className="glass-surface border border-slate-200/80 dark:border-white/15 rounded-2xl p-4 sm:p-5 hover:border-indigo-500/35 transition-colors"
         >
           <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-2">
             <span>Total Clicks</span>
@@ -396,7 +396,7 @@ export function AnalyticsDashboard({ links }: AnalyticsDashboardProps) {
           showReticles
           spotlightColor="rgba(16, 185, 129, 0.15)"
           borderGlowColor="rgba(16, 185, 129, 0.5)"
-          className="glass-surface border border-slate-200/80 dark:border-white/15 rounded-2xl p-5 hover:border-emerald-500/35 transition-colors"
+          className="glass-surface border border-slate-200/80 dark:border-white/15 rounded-2xl p-4 sm:p-5 hover:border-emerald-500/35 transition-colors"
         >
           <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-2">
             <span>Unique Visitors</span>
@@ -415,7 +415,7 @@ export function AnalyticsDashboard({ links }: AnalyticsDashboardProps) {
           showReticles
           spotlightColor="rgba(14, 165, 233, 0.16)"
           borderGlowColor="rgba(56, 189, 248, 0.55)"
-          className="glass-surface border border-slate-200/80 dark:border-white/15 rounded-2xl p-5 hover:border-sky-500/35 transition-colors"
+          className="glass-surface border border-slate-200/80 dark:border-white/15 rounded-2xl p-4 sm:p-5 hover:border-sky-500/35 transition-colors"
         >
           <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-2">
             <span>Active Shortcuts</span>
@@ -435,7 +435,7 @@ export function AnalyticsDashboard({ links }: AnalyticsDashboardProps) {
           showReticles
           spotlightColor="rgba(99, 102, 241, 0.15)"
           borderGlowColor="rgba(129, 140, 248, 0.5)"
-          className="glass-surface border border-slate-200/80 dark:border-white/15 rounded-2xl p-5 hover:border-indigo-400/35 transition-colors"
+          className="glass-surface border border-slate-200/80 dark:border-white/15 rounded-2xl p-4 sm:p-5 hover:border-indigo-400/35 transition-colors"
         >
           <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-2">
             <span>Top Geographic Market</span>

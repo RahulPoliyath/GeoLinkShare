@@ -126,8 +126,8 @@ export function LinksTable({
       )}
 
       {/* Search and Filters Glass Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 glass-surface border border-slate-200/80 dark:border-white/15 rounded-2xl p-4">
-        <div className="relative flex-1 max-w-md">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3 glass-surface border border-slate-200/80 dark:border-white/15 rounded-2xl p-3 sm:p-4">
+        <div className="relative flex-1 max-w-md min-w-0">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
             <Search className="w-4 h-4" />
           </div>
@@ -141,14 +141,14 @@ export function LinksTable({
         </div>
 
         {/* Status Segmented Buttons with spring pill */}
-        <div className="flex items-center gap-1 p-1 bg-slate-200/60 dark:bg-white/5 border border-slate-200/70 dark:border-white/10 rounded-xl">
+        <div className="grid grid-cols-3 sm:flex items-center gap-1 p-1 bg-slate-200/60 dark:bg-white/5 border border-slate-200/70 dark:border-white/10 rounded-xl">
           {filterTabs.map((tab) => {
             const active = statusFilter === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setStatusFilter(tab.id)}
-                className={`relative z-10 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap shrink-0 ${
+                className={`relative z-10 px-2 sm:px-3 py-1.5 text-[11px] sm:text-xs font-medium rounded-lg transition-colors whitespace-nowrap text-center ${
                   active
                     ? 'text-slate-900 dark:text-white'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
