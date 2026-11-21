@@ -3,7 +3,12 @@ import {
   checkDistributedRateLimit,
   getLinkByShortCode,
 } from '@/lib/db';
-import { getClientIp, validateSafeUrl } from '@/lib/security';
+import { escapeHtmlAttr, resolveLinkSocialPreview } from '@/lib/link-preview';
+import {
+  getClientIp,
+  isSocialPreviewCrawler,
+  validateSafeUrl,
+} from '@/lib/security';
 
 function noCacheRedirect(target: string | URL, status: 302 | 307 = 307): NextResponse {
   const response = NextResponse.redirect(target, { status });
@@ -62,6 +67,50 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ code
       return noCacheRedirect(
         new URL(`/link-status?status=blocked&code=${encodeURIComponent(code)}`, req.url)
       );
+    }
+
+    // Serve destination-aware OpenGraph metadata directly to link-preview crawlers (WhatsApp, Telegram, Slack, etc.)
+    const userAgent = req.headers.get('user-agent');
+    if (isSocialPreviewCrawler(userAgent)) {
+      const preview = await resolveLinkSocialPreview(link, req.url);
+      const safeTitle = escapeHtmlAttr(preview.title);
+      const safeDesc = escapeHtmlAttr(preview.description);
+      const safeSite = escapeHtmlAttr(preview.siteName);
+      const safeCanonical = escapeHtmlAttr(preview.canonicalUrl || req.url);
+      const imageMeta = preview.imageUrl
+        ? `<meta property="og:image" content="${escapeHtmlAttr(preview.imageUrl)}" />
+  <meta name="twitter:image" content="${escapeHtmlAttr(preview.imageUrl)}" />
+  <meta name="twitter:card" content="summary_large_image" />`
+        : `<meta name="twitter:card" content="summary" />`;
+
+      const html = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>${safeTitle}</title>
+  <meta name="description" content="${safeDesc}" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="${safeSite}" />
+  <meta property="og:title" content="${safeTitle}" />
+  <meta property="og:description" content="${safeDesc}" />
+  <meta property="og:url" content="${safeCanonical}" />
+  ${imageMeta}
+  <meta name="twitter:title" content="${safeTitle}" />
+  <meta name="twitter:description" content="${safeDesc}" />
+</head>
+<body>
+  <p>${safeTitle}</p>
+</body>
+</html>`;
+
+      return new NextResponse(html, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'public, max-age=120',
+          'X-Content-Type-Options': 'nosniff',
+        },
+      });
     }
 
     // If password-protected, direct user to unlock page (handles passcode + optional GPS)

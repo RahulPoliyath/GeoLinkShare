@@ -11,7 +11,7 @@ import {
   termsRequiredResponse,
   validateSafeUrl,
   validateSlug,
-  generateRandomSlug,
+  generateDomainBrandedSlug,
   hashPassword,
   verifyTermsConsentToken,
 } from '@/lib/security';
@@ -133,12 +133,12 @@ export async function POST(req: NextRequest) {
     } else {
       let attempts = 0;
       do {
-        finalSlug = generateRandomSlug(6);
+        finalSlug = generateDomainBrandedSlug(urlValidation.normalizedUrl, 5);
         attempts++;
       } while ((await getLinkByShortCode(finalSlug)) && attempts < 10);
 
       if (attempts >= 10) {
-        finalSlug = generateRandomSlug(8);
+        finalSlug = generateDomainBrandedSlug(urlValidation.normalizedUrl, 7);
       }
     }
 

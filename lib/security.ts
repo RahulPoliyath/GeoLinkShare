@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import jwt from 'jsonwebtoken';
 import { NextRequest, NextResponse } from 'next/server';
+import { extractDestinationBrand } from './domain-brand';
 
 const JWT_EXPIRES_IN = '7d';
 export const AUTH_COOKIE_NAME = 'lp_session';
@@ -756,6 +757,27 @@ export function generateRandomSlug(length = 6): string {
     result += chars[bytes[i] % chars.length];
   }
   return result;
+}
+
+/**
+ * Generate a domain-branded short slug combining the destination domain name
+ * with high-entropy random characters (e.g. youtube-k4M9x, instagram-7pQ2r).
+ */
+export function generateDomainBrandedSlug(normalizedUrl: string, randomLength = 5): string {
+  const { brandSlug } = extractDestinationBrand(normalizedUrl);
+  const maxPrefixLen = Math.max(3, 32 - 1 - randomLength);
+  const cleanPrefix = (brandSlug || 'link').slice(0, maxPrefixLen).replace(/-+$/g, '') || 'link';
+  return `${cleanPrefix}-${generateRandomSlug(randomLength)}`;
+}
+
+/**
+ * Detect social messaging & OpenGraph preview crawlers (WhatsApp, Telegram, Slack, Discord, Facebook, X, LinkedIn).
+ */
+export function isSocialPreviewCrawler(userAgent: string | null): boolean {
+  if (!userAgent) return false;
+  return /WhatsApp|facebookexternalhit|Facebot|Twitterbot|TelegramBot|Slackbot|Discordbot|LinkedInBot|SkypeUriPreview|Pinterest|Applebot|Viber|Snapchat|Line/i.test(
+    userAgent
+  );
 }
 
 const RESERVED_USERNAMES = new Set([
