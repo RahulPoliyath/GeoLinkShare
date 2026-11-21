@@ -12,8 +12,8 @@ import { Globe2, Crosshair, Link2 } from 'lucide-react';
 import { ThemeToggle } from './ThemeProvider';
 
 interface NavbarProps {
-  activeTab: 'shorten' | 'dashboard' | 'analytics' | 'security';
-  setActiveTab: (tab: 'shorten' | 'dashboard' | 'analytics' | 'security') => void;
+  activeTab: 'shorten' | 'dashboard' | 'analytics' | 'security' | 'about';
+  setActiveTab: (tab: 'shorten' | 'dashboard' | 'analytics' | 'security' | 'about') => void;
 }
 
 const NAV_ITEMS = [
@@ -21,6 +21,7 @@ const NAV_ITEMS = [
   { id: 'dashboard', label: 'My Links' },
   { id: 'analytics', label: 'Real-Time Analytics' },
   { id: 'security', label: 'Security Architecture' },
+  { id: 'about', label: 'About Us' },
 ] as const;
 
 const BRAND_LETTERS = [
@@ -262,14 +263,14 @@ export function Navbar({ activeTab, setActiveTab }: NavbarProps) {
         </div>
 
         {/* Zone 2: Clean single-line text navigation links with precision spring underline */}
-        <nav className="hidden md:flex items-center gap-2 lg:gap-5 text-xs lg:text-sm font-medium text-slate-600 dark:text-slate-300">
+        <nav className="hidden md:flex items-center gap-1 lg:gap-4 xl:gap-5 text-xs xl:text-sm font-medium text-slate-600 dark:text-slate-300">
           {NAV_ITEMS.map((item) => {
             const isActive = activeTab === item.id;
             return (
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`relative whitespace-nowrap shrink-0 py-1.5 px-2 lg:px-2.5 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
+                className={`relative whitespace-nowrap shrink-0 py-1.5 px-1.5 lg:px-2.5 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                   isActive
                     ? 'text-indigo-600 dark:text-cyan-300 font-semibold'
                     : 'hover:text-slate-900 dark:hover:text-white'
@@ -308,7 +309,7 @@ export function Navbar({ activeTab, setActiveTab }: NavbarProps) {
                 exit={{ opacity: 0, scale: 0.9, x: 8 }}
                 transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
                 onClick={() => setActiveTab('shorten')}
-                className="hidden sm:inline-flex items-center gap-1.5 px-3 lg:px-3.5 py-2 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl transition-all whitespace-nowrap shrink-0 shadow-sm shadow-indigo-500/25 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                className="hidden lg:inline-flex items-center gap-1.5 px-3 lg:px-3.5 py-2 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl transition-all whitespace-nowrap shrink-0 shadow-sm shadow-indigo-500/25 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
               >
                 <Link2 className="w-3.5 h-3.5" />
                 <span>New Short Link</span>
@@ -319,13 +320,14 @@ export function Navbar({ activeTab, setActiveTab }: NavbarProps) {
       </div>
 
       {/* Auto-fit mobile navigation grid (zero horizontal scroll across 320px-767px screens) */}
-      <nav className="md:hidden border-t border-slate-200/70 dark:border-white/10 px-2 py-1.5 grid grid-cols-4 gap-1 text-[11px] min-[380px]:text-xs font-medium text-slate-600 dark:text-slate-400">
+      <nav className="md:hidden border-t border-slate-200/70 dark:border-white/10 px-1.5 py-1.5 grid grid-cols-5 gap-0.5 text-[10px] min-[380px]:text-[11px] font-medium text-slate-600 dark:text-slate-400">
         {(
           [
             { id: 'shorten', label: 'Shorten' },
             { id: 'dashboard', label: 'My Links' },
             { id: 'analytics', label: 'Analytics' },
             { id: 'security', label: 'Security' },
+            { id: 'about', label: 'About Us' },
           ] as const
         ).map((item) => {
           const active = activeTab === item.id;

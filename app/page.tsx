@@ -15,6 +15,7 @@ import { AnalyticsDashboard } from '@/components/AnalyticsDashboard';
 import { LinksTable } from '@/components/LinksTable';
 import { QrModal } from '@/components/QrModal';
 import { SecuritySection } from '@/components/SecuritySection';
+import { AboutSection } from '@/components/AboutSection';
 import { AmbientBackdrop } from '@/components/AmbientBackdrop';
 import {
   AnimatedNumber,
@@ -39,7 +40,7 @@ import {
 } from '@/lib/client-auth';
 
 export default function HomePage() {
-  const [activeTab, setActiveTab] = useState<'shorten' | 'dashboard' | 'analytics' | 'security'>('shorten');
+  const [activeTab, setActiveTab] = useState<'shorten' | 'dashboard' | 'analytics' | 'security' | 'about'>('shorten');
   const [anonymousUserId, setAnonymousUserId] = useState<string | null>(null);
   const [copiedUserId, setCopiedUserId] = useState(false);
   const [links, setLinks] = useState<GeneratedLink[]>([]);
@@ -141,7 +142,7 @@ export default function HomePage() {
     });
   };
 
-  const handleNavigateTab = (tab: 'shorten' | 'dashboard' | 'analytics' | 'security') => {
+  const handleNavigateTab = (tab: 'shorten' | 'dashboard' | 'analytics' | 'security' | 'about') => {
     setActiveTab(tab);
     if (typeof window !== 'undefined') {
       window.scrollTo({ top: 0, behavior: 'auto' });
@@ -152,15 +153,17 @@ export default function HomePage() {
     handleNavigateTab('analytics');
   };
 
+  const isWebglStageTab = activeTab === 'shorten' || activeTab === 'about';
+
   return (
     <div
       className={`min-h-screen flex flex-col relative text-slate-900 dark:text-slate-100 ${
-        activeTab === 'shorten' ? 'webgl-stage-active' : ''
+        isWebglStageTab ? 'webgl-stage-active' : ''
       }`}
     >
       <ScrollProgressLine />
       <AmbientBackdrop />
-      {activeTab === 'shorten' && <CosmicUniverseStage3D stageStateRef={stageStateRef} />}
+      {isWebglStageTab && <CosmicUniverseStage3D stageStateRef={stageStateRef} />}
 
       {/* Top Bar Navigation */}
       <Navbar activeTab={activeTab} setActiveTab={handleNavigateTab} />
@@ -387,6 +390,18 @@ export default function HomePage() {
               <SecuritySection />
             </motion.div>
           )}
+
+          {activeTab === 'about' && (
+            <motion.div
+              key="tab-about"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <AboutSection stageStateRef={stageStateRef} onNavigateTab={handleNavigateTab} />
+            </motion.div>
+          )}
         </AnimatePresence>
       </main>
 
@@ -399,12 +414,19 @@ export default function HomePage() {
             <span>Enterprise-Grade URL Shortener & Analytics</span>
           </div>
 
-          <div className="flex items-center gap-4 text-xs">
+          <div className="flex flex-wrap items-center justify-center gap-4 text-xs">
             <button
               onClick={() => handleNavigateTab('security')}
               className="hover:text-slate-900 dark:hover:text-white transition-colors"
             >
               Security Policy
+            </button>
+            <span aria-hidden="true">·</span>
+            <button
+              onClick={() => handleNavigateTab('about')}
+              className="hover:text-slate-900 dark:hover:text-white transition-colors"
+            >
+              About Us
             </button>
             <span aria-hidden="true">·</span>
             <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">

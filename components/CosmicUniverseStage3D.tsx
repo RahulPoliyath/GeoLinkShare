@@ -123,11 +123,11 @@ export function CosmicUniverseStage3D({ stageStateRef }: CosmicUniverseStage3DPr
 
     const width = Math.max(1, container.clientWidth);
     const height = Math.max(1, container.clientHeight);
-    const pixelRatio = isSoftwareGl ? 1 : Math.min(window.devicePixelRatio || 1, 2);
+    let pixelRatio = isSoftwareGl ? 1 : Math.min(window.devicePixelRatio || 1, 2);
 
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.18;
+    renderer.toneMappingExposure = 1.2;
     renderer.setPixelRatio(pixelRatio);
     renderer.setSize(width, height);
     renderer.setClearColor(0x000000, 0);
@@ -297,9 +297,9 @@ export function CosmicUniverseStage3D({ stageStateRef }: CosmicUniverseStage3DPr
           vSharpness = mix(0.35, 1.0, clamp(uTransitionFocus * 1.15 + uBurst * 0.5, 0.0, 1.0));
           vAlpha = uStageIntensity * densityBoost * twinkle * farFade * nearFade;
 
-          float sizeGain = 1.0 + uTransitionFocus * 0.65 + uBurst * 0.5 + gravityWell * 0.4;
+          float sizeGain = 1.0 + uTransitionFocus * 0.72 + uBurst * 0.55 + gravityWell * 0.42;
           float ptSize = aMeta.x * 16.5 * sizeGain * uPixelRatio;
-          gl_PointSize = clamp(ptSize / viewDist, 1.4, 24.0);
+          gl_PointSize = clamp(ptSize / viewDist, 1.5, 32.0);
           gl_Position = projectionMatrix * mvPos;
         }
       `,
@@ -317,22 +317,24 @@ export function CosmicUniverseStage3D({ stageStateRef }: CosmicUniverseStage3DPr
           float d = length(uv);
           if (d > 0.5) discard;
 
-          // Crisp optical stellar core + optional 4-point telescope diffraction spikes on bright stars
-          float falloff = mix(1.3, 3.1, vSharpness);
-          float core = pow(clamp(1.0 - d * 2.0, 0.0, 1.0), falloff);
+          // Razor-sharp 4K anti-aliased stellar pinpoint + subtle airy corona & optical diffraction spikes
+          float edgeAA = 1.0 - smoothstep(0.42, 0.5, d);
+          float falloff = mix(1.45, 3.6, vSharpness);
+          float core = pow(clamp(1.0 - d * 2.0, 0.0, 1.0), falloff) * edgeAA;
+          float pinpoint = smoothstep(0.16, 0.0, d);
 
-          float spikeH = exp(-abs(uv.y) * 26.0) * exp(-abs(uv.x) * 6.5);
-          float spikeV = exp(-abs(uv.x) * 26.0) * exp(-abs(uv.y) * 6.5);
-          float spikes = (spikeH + spikeV) * vFlare * vSharpness * 0.85;
+          float spikeH = exp(-abs(uv.y) * 32.0) * exp(-abs(uv.x) * 7.0);
+          float spikeV = exp(-abs(uv.x) * 32.0) * exp(-abs(uv.y) * 7.0);
+          float spikes = (spikeH + spikeV) * vFlare * vSharpness * 0.92 * edgeAA;
 
-          float intensity = clamp(core + spikes, 0.0, 1.0);
+          float intensity = clamp(core + pinpoint * 0.45 + spikes, 0.0, 1.0);
 
           // In light mode when foreground content is focused, deepen stars to royal indigo/sapphire so they remain legible; during transition bursts, glow white-hot
-          vec3 lightTint = mix(vec3(0.08, 0.25, 0.68), vColor, max(uDarkMode, uTransitionFocus * 0.9));
-          vec3 finalColor = mix(lightTint, vec3(1.0), core * 0.45 * max(uDarkMode, uTransitionFocus));
+          vec3 lightTint = mix(vec3(0.08, 0.25, 0.68), vColor, max(uDarkMode, uTransitionFocus * 0.92));
+          vec3 finalColor = mix(lightTint, vec3(1.0), (core * 0.35 + pinpoint * 0.55) * max(uDarkMode, uTransitionFocus));
 
-          float alpha = intensity * vAlpha * mix(0.55, 1.0, max(uDarkMode, uTransitionFocus));
-          if (alpha < 0.01) discard;
+          float alpha = intensity * vAlpha * mix(0.58, 1.0, max(uDarkMode, uTransitionFocus));
+          if (alpha < 0.008) discard;
 
           gl_FragColor = vec4(finalColor, alpha);
         }
@@ -675,7 +677,7 @@ export function CosmicUniverseStage3D({ stageStateRef }: CosmicUniverseStage3DPr
     streakLines.frustumCulled = false;
     scene.add(streakLines);
 
-    // ================= 6. POSTPROCESSING (GPU ONLY) =================
+    // ================= 6. POSTPROCESSING (GPU ONLY, 90FPS+ HALF-RES BLOOM) =================
     let composer: EffectComposer | null = null;
     let bloomPass: UnrealBloomPass | null = null;
     if (!isSoftwareGl) {
@@ -684,9 +686,9 @@ export function CosmicUniverseStage3D({ stageStateRef }: CosmicUniverseStage3DPr
       composer.setSize(width, height);
       composer.addPass(new RenderPass(scene, camera));
       bloomPass = new UnrealBloomPass(
-        new THREE.Vector2(width, height),
-        0.52,
-        0.52,
+        new THREE.Vector2(Math.max(256, Math.floor(width * 0.6)), Math.max(256, Math.floor(height * 0.6))),
+        0.5,
+        0.48,
         0.34
       );
       composer.addPass(bloomPass);
@@ -735,10 +737,24 @@ export function CosmicUniverseStage3D({ stageStateRef }: CosmicUniverseStage3DPr
       if (!container) return;
       const w = Math.max(1, container.clientWidth);
       const h = Math.max(1, container.clientHeight);
+      pixelRatio = isSoftwareGl ? 1 : Math.min(window.devicePixelRatio || 1, 2);
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
+      renderer.setPixelRatio(pixelRatio);
       renderer.setSize(w, h);
-      if (composer) composer.setSize(w, h);
+      starMat.uniforms.uPixelRatio.value = pixelRatio;
+      nebMat.uniforms.uPixelRatio.value = pixelRatio;
+      burstMat.uniforms.uPixelRatio.value = pixelRatio;
+      if (composer) {
+        composer.setPixelRatio(pixelRatio);
+        composer.setSize(w, h);
+      }
+      if (bloomPass) {
+        bloomPass.resolution.set(
+          Math.max(256, Math.floor(w * 0.6)),
+          Math.max(256, Math.floor(h * 0.6))
+        );
+      }
     };
     const resizeObserver = new ResizeObserver(onResize);
     resizeObserver.observe(container);

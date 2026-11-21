@@ -124,7 +124,7 @@ interface ScrollMorphWorkspaceProps {
   onLinkUpdated: (updatedLink: GeneratedLink) => void;
   onOpenQr: (url: string, title: string) => void;
   onSelectLinkForAnalytics: (linkId: string) => void;
-  onNavigateTab: (tab: 'shorten' | 'dashboard' | 'analytics' | 'security') => void;
+  onNavigateTab: (tab: 'shorten' | 'dashboard' | 'analytics' | 'security' | 'about') => void;
 }
 
 export function ScrollMorphWorkspace({
